@@ -40,6 +40,10 @@ try {
 }
 
 // 5. Rotas
+app.get('/', (req, res) => {
+  res.status(200).send('<h1>API</h1>');
+});
+
 app.use('/auth', authRotas);
 
 app.get('/health', (req, res) => {
