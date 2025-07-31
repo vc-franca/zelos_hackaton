@@ -1,19 +1,14 @@
-"use client"; // Diretiva do Next.js para indicar que este componente roda no cliente (não no servidor)
+"use client";
 
-import { useState, useEffect, useRef } from "react"; // Hooks do React
-import Link from "next/link"; // Componente de navegação do Next.js
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 export default function Header() {
-  // Estado para controlar o menu mobile
   const [isOpen, setIsOpen] = useState(false);
-  // Estado para armazenar o nome do usuário
   const [userName, setUserName] = useState("");
-  // Estado para controlar o dropdown do usuário
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  // Referência ao dropdown para detectar cliques fora dele
   const dropdownRef = useRef(null);
 
-  // Hook para carregar dados do usuário e adicionar/remover ouvinte de clique fora
   useEffect(() => {
     const userData = localStorage.getItem("usuario");
     if (userData) {
@@ -27,15 +22,12 @@ export default function Header() {
       }
     };
 
-    // Adiciona evento ao clicar fora do dropdown
     document.addEventListener("mousedown", handleClickOutside);
-    // Remove o evento ao desmontar o componente
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  // Função de logout: remove dados do usuário e redireciona para a home
   const handleLogout = () => {
     localStorage.removeItem("usuario");
     window.location.href = "/";
@@ -56,11 +48,11 @@ export default function Header() {
         </button>
 
         {/* Logo */}
-        <Link href="/home" className="flex items-center h-full mx-auto lg:mx-0">
+        <Link href="/" className="flex items-center h-full mx-auto lg:mx-0">
           <img
-            src="MEDGO_logo.png"
-            alt="Logo MEDGO"
-            className="h-25 lg:h-25 w-auto object-contain"
+            src="/logo-manutencao-escolar.png"
+            alt="Logo Sistema de Manutenção"
+            className="h-10 lg:h-12 w-auto object-contain"
           />
         </Link>
 
@@ -68,10 +60,11 @@ export default function Header() {
         <div className="hidden lg:flex items-center justify-center flex-1">
           <nav>
             <ul className="flex gap-6 text-base font-medium items-center">
-              {[ // Navegação principal
-                ["Home", "/home"],
-                ["Sua Agenda", "/agenda"],
-                ["Sobre nós", "/sobrenos"],
+              {[
+                ["Início", "/"],
+                ["Meus Chamados", "/meus-chamados"],
+                ["Relatórios", "/relatorios"],
+              
               ].map(([label, href]) => (
                 <li key={label}>
                   <Link
@@ -118,7 +111,6 @@ export default function Header() {
 
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    {/* Link para perfil */}
                     <Link
                       href="/perfil"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#004aad]/10 transition-colors"
@@ -126,7 +118,13 @@ export default function Header() {
                     >
                       Meu Perfil
                     </Link>
-                    {/* Botão de sair */}
+                    <Link
+                      href="/configuracoes"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#004aad]/10 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Configurações
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#004aad]/10 transition-colors"
@@ -161,12 +159,12 @@ export default function Header() {
             </>
           )}
           
-          {/* Botão "Marcar Consulta" visível apenas em telas grandes */}
+          {/* Botão "Novo Chamado" visível apenas em telas grandes */}
           <Link
-            href="/marcar-consulta"
+            href="/novo-chamado"
             className="hidden lg:block px-4 py-3 bg-[#004aad] text-white rounded-4xl hover:bg-[#003a8c] transition duration-300 shadow-sm hover:shadow-md whitespace-nowrap"
           >
-            Marcar Consulta
+            Novo Chamado
           </Link>
         </div>
       </div>
@@ -178,12 +176,12 @@ export default function Header() {
         }`}
       >
         <ul className="flex flex-col gap-4 text-base font-medium px-5">
-          {[ // Itens do menu mobile
-            ["Home", "/home"],
-            ["Marcar consulta", "/marcar-consulta"],
-            ["Sua Agenda", "/agenda"],
-            ["Sobre nós", "/sobrenos"],
+          {[
+            ["Início", "/"],
+            ["Meus Chamados", "/meus-chamados"],
+            ["Relatórios", "/relatorios"],
             ["Meu Perfil", "/perfil"],
+            ["Configurações", "/configuracoes"],
           ].map(([label, href]) => (
             <li key={label}>
               <Link
