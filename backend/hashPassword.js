@@ -1,15 +1,23 @@
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 
-async function generateHashedPassword() {
-  const password = 'teste'; // Substitua pela senha que você deseja hashear
+dotenv.config();
+
+async function generateHash(label, password) {
+  // Gerar o salt
+  const salt = await bcrypt.genSalt(10);
+
+  // Hashear a senha com o salt
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  console.log(`${label} Hash:`, hashedPassword);
+}
+
+async function generateHashedPasswords() {
   try {
-    // Gerar o salt
-    const salt = await bcrypt.genSalt(10);
+    await generateHash('ADMIN', process.env.SENHA_ADMIN);
+    await generateHash('USER', process.env.SENHA_USER);
 
-    // Hashear a senha com o salt
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    console.log('Senha Hasheada:', hashedPassword);
     process.exit(0); // Encerra o processo após exibir o hash
   } catch (error) {
     console.error('Erro ao hashear a senha:', error);
@@ -17,4 +25,4 @@ async function generateHashedPassword() {
   }
 }
 
-generateHashedPassword();
+generateHashedPasswords();

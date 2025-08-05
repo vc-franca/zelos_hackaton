@@ -41,7 +41,7 @@ const criarChamadoController = async (req, res) => {
             status: status,
         }
 
-        const chamadoId = await chamadoData();
+        const chamadoId = await criarChamado();
         res.status(201).json({ mensagem: 'Chamado criado com sucesso: ', chamadoId })
     } catch (err) {
         console.error('Erro ao criar chamado por ID: ', err);
@@ -62,7 +62,7 @@ const atualizarChamadoController = async (req, res) => {
             status: status,
         }
 
-        await chamadoData();
+        await atualizarChamado(chamadoId, chamadoData);
         res.status(201).json({ mensagem: 'Chamado atualizado com sucesso' });
 
     } catch (err) {

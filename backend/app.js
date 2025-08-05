@@ -3,7 +3,6 @@ import cors from 'cors';
 import session from 'express-session';
 import dotenv from 'dotenv';
 import authRotas from './routes/authRotas.js';
-import passport from './config/ldap.js';
 
 // 1. Carrega variáveis de ambiente PRIMEIRO
 dotenv.config();
@@ -26,13 +25,6 @@ try {
     saveUninitialized: false,
     cookie: { secure: false }
   }));
-
-  // 4. Inicialização segura do Passport
-  if (!passport) {
-    throw new Error('Passport não foi importado corretamente');
-  }
-  app.use(passport.initialize());
-  app.use(passport.session());
 
 } catch (err) {
   console.error('Erro na configuração inicial:', err);
