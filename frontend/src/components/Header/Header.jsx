@@ -48,7 +48,7 @@ export default function Header() {
         </button>
 
         {/* Logo */}
-        <Link href="/" className="flex items-center h-full mx-auto lg:mx-0">
+        <Link href="/logo.png" className="flex items-center h-full mx-auto lg:mx-0">
           <img
             src="/logo-manutencao-escolar.png"
             alt="Logo Sistema de Manutenção"
