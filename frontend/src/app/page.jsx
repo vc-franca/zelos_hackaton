@@ -110,30 +110,45 @@ export default function HomePage() {
         </Link>
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7] py-24 px-4">
-          <div className="max-w-6xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-slide-up">Sistema de Manutenção Escolar</h1>
-            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              Solução completa para gestão de manutenção de equipamentos escolares com agilidade e eficiência
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link
-                href="/novo-chamado"
-                className="bg-[#E31B23] text-white px-8 py-4 rounded-lg font-bold hover:bg-[#C5161D] transition duration-300 text-lg shadow-lg focus:ring-2 focus:ring-offset-2 focus:ring-[#E31B23]"
-                aria-label="Abrir novo chamado"
-              >
-                Abrir Novo Chamado
-              </Link>
-              <Link
-                href="/meus-chamados"
-                className="bg-transparent border-2 border-[#FFFDF7] text-[#FFFDF7] px-8 py-4 rounded-lg font-bold hover:bg-[#FFFDF7] hover:text-[#1B1F3B] transition duration-300 text-lg focus:ring-2 focus:ring-offset-2 focus:ring-[#FFFDF7]"
-                aria-label="Acompanhar chamados"
-              >
-                Acompanhar Chamados
-              </Link>
+        <section className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7]">
+          <div className="mx-auto text-center">
+            <div className="relative w-full max-w-[1920px] h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden rounded-lg shadow-inner mx-auto">
+              <video src="/backgroundhero.mp4" autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0" />
+              {/* Overlay para escurecer o vídeo */}
+              <div className="absolute inset-0 bg-black bg-opacity-50 z-10" />
+
+              {/* Conteúdo centralizado */}
+              <div className="relative z-20 flex flex-col justify-center items-center h-full px-4">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 animate-slide-up">
+                  Sistema de Manutenção Escolar
+                </h1>
+                <p
+                  className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 max-w-3xl animate-slide-up"
+                  style={{ animationDelay: "0.2s" }}
+                >
+                  Solução completa para gestão de manutenção de equipamentos escolares com agilidade e eficiência
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-4 px-4 w-full sm:w-auto">
+                  <Link
+                    href="/novo-chamado"
+                    className="bg-[#E31B23] text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-bold hover:bg-[#C5161D] transition duration-300 text-base sm:text-lg shadow-lg focus:ring-2 focus:ring-offset-2 focus:ring-[#E31B23] text-center"
+                    aria-label="Abrir novo chamado"
+                  >
+                    Abrir Novo Chamado
+                  </Link>
+                  <Link
+                    href="/meus-chamados"
+                    className="bg-transparent border-2 border-[#FFFDF7] text-[#FFFDF7] px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-bold hover:bg-[#FFFDF7] hover:text-[#1B1F3B] transition duration-300 text-base sm:text-lg focus:ring-2 focus:ring-offset-2 focus:ring-[#FFFDF7] text-center"
+                    aria-label="Acompanhar chamados"
+                  >
+                    Acompanhar Chamados
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </section>
+
 
         {/* Serviços Section */}
         <section className="py-20 px-4">

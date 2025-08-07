@@ -8,16 +8,16 @@ export default function Footer() {
           {/* Logo da Empresa */}
           <div className="flex flex-col items-center sm:items-start gap-4">
             <img
-              src="/MEDGO_logo.png"
-              alt="Logo MEDGO"
+              src="/logo.svg"
+              alt="LogoSenaiZelos"
               className="h-25 w-auto object-contain"
             />
-            <p className="text-sm max-w-xs">Cuidando da sua saúde com tecnologia.</p>
+            <p className="text-sm max-w-xs">Aqui para ajudar com seus problemas.</p>
           </div>
 
           {/* Navegação */}
           <div>
-            <h4 className="text-slate-700 font-semibold mb-4">Navegação</h4>
+            <h4 className="text-slate-700 font-semibold mb-4">Links rápidos</h4>
             <ul className="space-y-2 text-sm">
               <li><a href="/home" className="hover:text-[#004aad]">Home</a></li>
               <li><a href="/agenda" className="hover:text-[#004aad]">Agenda</a></li>
@@ -28,17 +28,17 @@ export default function Footer() {
 
           {/* Contato */}
           <div>
-            <h4 className="text-slate-700 font-semibold mb-4">Contato</h4>
+            <h4 className="text-slate-700 font-semibold mb-4">Entre em contato</h4>
             <ul className="space-y-2 text-sm">
-              <li><strong>Email:</strong>  medgo@gmail.com</li>
-              <li><strong>Suporte:</strong> medgosuporte@gmail.com</li>
-              <li><strong>Telefone:</strong> (11) 99887-1356</li>
+              <li><strong>Email:</strong>  senaizelos@gmail.com</li>
+              <li><strong>Suporte:</strong> senaizelossuporte@gmail.com</li>
+              <li><strong>Telefone:</strong> (11) 99999-9999</li>
             </ul>
           </div>
 
           {/* Redes sociais */}
           <div>
-            <h4 className="text-slate-700 font-semibold mb-4">Siga-nos</h4>
+            <h4 className="text-slate-700 font-semibold mb-4">Siga-nos nas redes</h4>
             <ul className="space-y-2 text-sm">
               <li><a href="https://www.instagram.com/" className="hover:text-[#004aad]">Instagram</a></li>
               <li><a href="https://br.linkedin.com/" className="hover:text-[#004aad]">LinkedIn</a></li>
@@ -49,7 +49,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="mt-12 border-t pt-6 text-center text-xs text-slate-400">
-          © MEDGO. Todos os direitos reservados.
+          ©SENAIZELOS. Todos os direitos reservados.
         </div>
       </div>
     </footer>
