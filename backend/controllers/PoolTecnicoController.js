@@ -1,4 +1,4 @@
-import { listarPoolTecnico, obterPoolTecnicoPorId, criarPoolTecnico, atualizarPoolTecnico, excluirPoolTecnico } from '../models/PoolTecnico';
+import { listarPoolTecnico, obterPoolTecnicoPorId, criarPoolTecnico, atualizarPoolTecnico, excluirPoolTecnico } from '../models/PoolTecnico.js';
 
 const listarPoolTecnicoController = async (req, res) => {
     try {

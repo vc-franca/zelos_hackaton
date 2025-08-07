@@ -1,8 +1,8 @@
-import { listarApontamento, obterApontamentoPorId, criarApontamento, atualizarApontamento, excluirApontamento } from '../models/Apontamentos';
+import { listarApontamentos, obterApontamentoPorId, criarApontamento, atualizarApontamento, excluirApontamento } from '../models/Apontamentos.js';
 
-const listarApontamentoController = async (req, res) => {
+const listarApontamentosController = async (req, res) => {
     try {
-        const apontamentos = await listarApontamento();
+        const apontamentos = await listarApontamentos();
         res.json(apontamentos);
     } catch (err) {
         console.error('Erro ao listar apontamentos: ', err);
@@ -65,7 +65,7 @@ const excluirApontamentoController = async (req, res) => {
 };
 
 export {
-    listarApontamentoController,
+    listarApontamentosController,
     obterApontamentoPorIdController,
     criarApontamentoController,
     atualizarApontamentoController,

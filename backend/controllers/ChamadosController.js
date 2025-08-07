@@ -1,4 +1,4 @@
-import { listarChamado, obterChamadoPorId, criarChamado, atualizarChamado, excluirChamado } from '../models/Chamados';
+import { listarChamado, obterChamadoPorId, criarChamado, atualizarChamado, excluirChamado } from '../models/Chamados.js';
 
 /* --------------------------------- LISTAR --------------------------------- */
 const listarChamadoController = async (req, res) => {
