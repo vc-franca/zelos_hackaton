@@ -1,64 +1,104 @@
+// Habilitando renderização no lado do cliente para interatividade com React hooks e gerenciamento de estado
 "use client";
 
+// Importando dependências necessárias para a construção da página
 import Link from "next/link";
 import Head from "next/head";
 import { useState, useEffect } from "react";
 
+// Definindo mapeamento de tipo_id para nomes legíveis, consistente com meus-chamados.jsx
+const tipoMap = {
+  1: "Manutenção",
+  2: "Reparo",
+  3: "Instalação",
+};
+
+// Definindo mapeamento de tecnico_id para nomes legíveis, consistente com meus-chamados.jsx
+const tecnicoMap = {
+  1: "João Silva",
+  2: "Maria Oliveira",
+  3: "Carlos Souza",
+};
+
+// Definindo o componente principal para abertura de novos chamados
 export default function NovoChamado() {
+  // Gerenciando o estado do formulário com os dados do chamado
   const [formData, setFormData] = useState({
-    assetNumber: "",
-    itemDescription: "",
-    room: "",
-    serviceType: "",
-    additionalDetails: "",
+    titulo: "",
+    numeroPatrimonio: "",
+    descricao: "",
+    tipo_id: "",
+    tecnico_id: "1", // Definindo valor padrão para técnico_id
   });
+  // Gerenciando os erros de validação do formulário
   const [errors, setErrors] = useState({});
+  // Controlando o estado de envio do formulário
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Controlando a visibilidade do modal de sucesso
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Validando os campos do formulário
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.assetNumber.match(/^[A-Z0-9-]{3,10}$/)) {
-      newErrors.assetNumber = "O número de patrimônio deve ter 3-10 caracteres alfanuméricos.";
+    if (!formData.titulo.trim()) {
+      newErrors.titulo = "O título é obrigatório.";
     }
-    if (!formData.itemDescription.trim()) {
-      newErrors.itemDescription = "A descrição do item é obrigatória.";
+    if (!formData.numeroPatrimonio.match(/^[A-Z0-9-]{3,10}$/)) {
+      newErrors.numeroPatrimonio = "O número de patrimônio deve ter 3-10 caracteres alfanuméricos.";
     }
-    if (!formData.room.trim()) {
-      newErrors.room = "A sala é obrigatória.";
+    if (!formData.descricao.trim()) {
+      newErrors.descricao = "A descrição é obrigatória.";
     }
-    if (!formData.serviceType) {
-      newErrors.serviceType = "Selecione um tipo de serviço.";
+    if (!formData.tipo_id) {
+      newErrors.tipo_id = "Selecione um tipo de serviço.";
+    }
+    if (!formData.tecnico_id) {
+      newErrors.tecnico_id = "Selecione um técnico.";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Manipulando mudanças nos campos do formulário
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
+  // Manipulando o envio do formulário
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
       setIsSubmitting(true);
       setTimeout(() => {
-        console.log("Form submitted:", formData);
+        // Simulando envio para backend com dados alinhados à tabela chamados
+        const newTicket = {
+          id: Math.max(...mockTickets.map((t) => t.id), 0) + 1, // Incremento simples para ID
+          titulo: formData.titulo,
+          descricao: `Patrimônio: ${formData.numeroPatrimonio} - Descrição: ${formData.descricao}`, // Combinando número de patrimônio e descrição
+          tipo_id: parseInt(formData.tipo_id),
+          tecnico_id: parseInt(formData.tecnico_id), // Técnico é obrigatório
+          usuario_id: 101, // Usuário fixo para mock
+          status: "pendente",
+          criado_em: new Date().toISOString(),
+          notes: [],
+        };
+        console.log("Novo chamado submetido:", newTicket); // Placeholder para integração futura
         setIsSubmitting(false);
         setShowSuccess(true);
         setFormData({
-          assetNumber: "",
-          itemDescription: "",
-          room: "",
-          serviceType: "",
-          additionalDetails: "",
+          titulo: "",
+          numeroPatrimonio: "",
+          descricao: "",
+          tipo_id: "",
+          tecnico_id: "1", // Redefinindo valor padrão após envio
         });
       }, 1000);
     }
   };
 
+  // Configurando temporizador para fechar o modal de sucesso
   useEffect(() => {
     if (showSuccess) {
       const timer = setTimeout(() => setShowSuccess(false), 3000);
@@ -66,8 +106,10 @@ export default function NovoChamado() {
     }
   }, [showSuccess]);
 
+  // Renderizando a interface do componente
   return (
     <>
+      {/* Configurando metadados da página para SEO e acessibilidade */}
       <Head>
         <title>Abrir Novo Chamado | Sistema de Manutenção Escolar</title>
         <meta
@@ -76,6 +118,7 @@ export default function NovoChamado() {
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+      {/* Definindo estilos globais para animações, tooltips e estados de formulário */}
       <style jsx global>{`
         @keyframes slide-up {
           from {
@@ -90,16 +133,18 @@ export default function NovoChamado() {
         @keyframes fade-in {
           from {
             opacity: 0;
+            transform: scale(0.95);
           }
           to {
             opacity: 1;
+            transform: scale(1);
           }
         }
         .animate-slide-up {
-          animation: slide-up 0.5s ease-out forwards;
+          animation: slide-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
         .animate-fade-in {
-          animation: fade-in 0.3s ease-out forwards;
+          animation: fade-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
         .tooltip {
           position: relative;
@@ -125,16 +170,49 @@ export default function NovoChamado() {
           opacity: 0.6;
           cursor: not-allowed;
         }
+        .primary-button {
+          background: linear-gradient(145deg, #e31b23, #c5161d);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .primary-button:hover:not(:disabled),
+        .primary-button:focus:not(:disabled) {
+          transform: scale(1.05);
+          box-shadow: 0 0 8px rgba(227, 27, 35, 0.5);
+        }
+        @media (max-width: 639px) {
+          .form-container {
+            padding: 16px;
+          }
+          .tooltip:hover::after {
+            font-size: 0.75rem;
+            padding: 6px 10px;
+          }
+        }
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .form-container {
+            padding: 20px;
+          }
+          .tooltip:hover::after {
+            font-size: 0.875rem;
+            padding: 8px 12px;
+          }
+        }
+        @media (min-width: 1024px) {
+          .form-container {
+            padding: 24px;
+          }
+        }
       `}</style>
+      {/* Renderizando o contêiner principal da página */}
       <div className="min-h-screen bg-[#FFFDF7] font-sans">
-        {/* Header Section */}
+        {/* Renderizando a seção de cabeçalho com título e navegação */}
         <section className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7] py-16 px-4">
           <div className="max-w-6xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-slide-up">
               Abrir Novo Chamado
             </h1>
             <p
-              className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto animate-slide-up"
+              className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto animate-slide-up text-[#FFFDF7]/90"
               style={{ animationDelay: "0.2s" }}
             >
               Registre problemas em equipamentos escolares de forma rápida e organizada
@@ -149,166 +227,179 @@ export default function NovoChamado() {
           </div>
         </section>
 
-        {/* Form Section */}
+        {/* Renderizando a seção do formulário */}
         <section className="py-20 px-4">
           <div className="max-w-3xl mx-auto">
-            <div className="bg-[#2D3250] p-8 rounded-xl shadow-lg border-t-4 border-[#E31B23] animate-slide-up">
+            <div className="bg-[#2D3250] form-container rounded-xl shadow-lg border-t-4 border-[#E31B23] animate-slide-up">
               <h2 className="text-3xl font-bold text-[#FFFDF7] mb-6">Formulário de Novo Chamado</h2>
-              <form onSubmit={handleSubmit} className="space-y-6" noValidate aria-live="polite">
+              <form onSubmit={handleSubmit} className="space-y-8" noValidate aria-live="polite">
                 <div>
                   <label
-                    htmlFor="assetNumber"
-                    className="block text-lg font-medium text-[#FFFDF7] mb-2 tooltip"
+                    htmlFor="titulo"
+                    className="block text-lg font-semibold text-[#FFFDF7] mb-2 tooltip"
+                    data-tooltip="Digite um título para o chamado (ex.: Problema no Computador)"
+                  >
+                    Título <span className="text-[#E31B23]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="titulo"
+                    name="titulo"
+                    value={formData.titulo}
+                    onChange={handleInputChange}
+                    className={`w-full p-4 bg-[#1B1F3B] text-[#FFFDF7] border ${
+                      errors.titulo ? "border-red-500" : "border-[#FFFDF7]/20"
+                    } rounded-lg focus:ring-4 focus:ring-[#E31B23] focus:border-transparent transition duration-200 placeholder-[#FFFDF7]/70`}
+                    required
+                    aria-describedby="titulo-error"
+                    aria-invalid={!!errors.titulo}
+                    disabled={isSubmitting}
+                  />
+                  {errors.titulo && (
+                    <p id="titulo-error" className="text-red-400 text-sm mt-2 animate-fade-in">
+                      {errors.titulo}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="numeroPatrimonio"
+                    className="block text-lg font-semibold text-[#FFFDF7] mb-2 tooltip"
                     data-tooltip="Digite o número de patrimônio (3-10 caracteres alfanuméricos)"
                   >
                     Número de Patrimônio <span className="text-[#E31B23]">*</span>
                   </label>
                   <input
                     type="text"
-                    id="assetNumber"
-                    name="assetNumber"
-                    value={formData.assetNumber}
+                    id="numeroPatrimonio"
+                    name="numeroPatrimonio"
+                    value={formData.numeroPatrimonio}
                     onChange={handleInputChange}
-                    className={`w-full p-3 bg-[#1B1F3B] text-[#FFFDF7] border ${
-                      errors.assetNumber ? "border-red-500" : "border-[#FFFDF7]/20"
-                    } rounded-lg focus:ring-2 focus:ring-[#E31B23] focus:border-transparent transition duration-200 placeholder-[#FFFDF7]/50`}
+                    className={`w-full p-4 bg-[#1B1F3B] text-[#FFFDF7] border ${
+                      errors.numeroPatrimonio ? "border-red-500" : "border-[#FFFDF7]/20"
+                    } rounded-lg focus:ring-4 focus:ring-[#E31B23] focus:border-transparent transition duration-200 placeholder-[#FFFDF7]/70`}
                     required
-                    aria-describedby="assetNumber-error"
+                    aria-describedby="numeroPatrimonio-error"
+                    aria-invalid={!!errors.numeroPatrimonio}
                     disabled={isSubmitting}
                   />
-                  {errors.assetNumber && (
-                    <p id="assetNumber-error" className="text-red-400 text-sm mt-1 animate-fade-in">
-                      {errors.assetNumber}
+                  {errors.numeroPatrimonio && (
+                    <p id="numeroPatrimonio-error" className="text-red-400 text-sm mt-2 animate-fade-in">
+                      {errors.numeroPatrimonio}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label
-                    htmlFor="itemDescription"
-                    className="block text-lg font-medium text-[#FFFDF7] mb-2 tooltip"
-                    data-tooltip="Descreva o equipamento (ex.: Computador, Projetor)"
+                    htmlFor="descricao"
+                    className="block text-lg font-semibold text-[#FFFDF7] mb-2 tooltip"
+                    data-tooltip="Descreva o problema detalhadamente"
                   >
-                    Descrição do Item <span className="text-[#E31B23]">*</span>
+                    Descrição <span className="text-[#E31B23]">*</span>
                   </label>
-                  <input
-                    type="text"
-                    id="itemDescription"
-                    name="itemDescription"
-                    value={formData.itemDescription}
+                  <textarea
+                    id="descricao"
+                    name="descricao"
+                    value={formData.descricao}
                     onChange={handleInputChange}
-                    className={`w-full p-3 bg-[#1B1F3B] text-[#FFFDF7] border ${
-                      errors.itemDescription ? "border-red-500" : "border-[#FFFDF7]/20"
-                    } rounded-lg focus:ring-2 focus:ring-[#E31B23] focus:border-transparent transition duration-200 placeholder-[#FFFDF7]/50`}
+                    className={`w-full p-4 bg-[#1B1F3B] text-[#FFFDF7] border ${
+                      errors.descricao ? "border-red-500" : "border-[#FFFDF7]/20"
+                    } rounded-lg focus:ring-4 focus:ring-[#E31B23] focus:border-transparent transition duration-200 placeholder-[#FFFDF7]/70`}
+                    rows="4"
                     required
-                    aria-describedby="itemDescription-error"
+                    aria-describedby="descricao-error"
+                    aria-invalid={!!errors.descricao}
                     disabled={isSubmitting}
-                  />
-                  {errors.itemDescription && (
-                    <p id="itemDescription-error" className="text-red-400 text-sm mt-1 animate-fade-in">
-                      {errors.itemDescription}
+                  ></textarea>
+                  {errors.descricao && (
+                    <p id="descricao-error" className="text-red-400 text-sm mt-2 animate-fade-in">
+                      {errors.descricao}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label
-                    htmlFor="room"
-                    className="block text-lg font-medium text-[#FFFDF7] mb-2 tooltip"
-                    data-tooltip="Indique a sala onde o equipamento está localizado"
-                  >
-                    Sala <span className="text-[#E31B23]">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="room"
-                    name="room"
-                    value={formData.room}
-                    onChange={handleInputChange}
-                    className={`w-full p-3 bg-[#1B1F3B] text-[#FFFDF7] border ${
-                      errors.room ? "border-red-500" : "border-[#FFFDF7]/20"
-                    } rounded-lg focus:ring-2 focus:ring-[#E31B23] focus:border-transparent transition duration-200 placeholder-[#FFFDF7]/50`}
-                    required
-                    aria-describedby="room-error"
-                    disabled={isSubmitting}
-                  />
-                  {errors.room && (
-                    <p id="room-error" className="text-red-400 text-sm mt-1 animate-fade-in">
-                      {errors.room}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="serviceType"
-                    className="block text-lg font-medium text-[#FFFDF7] mb-2 tooltip"
+                    htmlFor="tipo_id"
+                    className="block text-lg font-semibold text-[#FFFDF7] mb-2 tooltip"
                     data-tooltip="Escolha o tipo de serviço necessário"
                   >
                     Tipo de Serviço <span className="text-[#E31B23]">*</span>
                   </label>
                   <select
-                    id="serviceType"
-                    name="serviceType"
-                    value={formData.serviceType}
+                    id="tipo_id"
+                    name="tipo_id"
+                    value={formData.tipo_id}
                     onChange={handleInputChange}
-                    className={`w-full p-3 bg-[#1B1F3B] text-[#FFFDF7] border ${
-                      errors.serviceType ? "border-red-500" : "border-[#FFFDF7]/20"
-                    } rounded-lg focus:ring-2 focus:ring-[#E31B23] focus:border-transparent transition duration-200`}
+                    className={`w-full p-4 bg-[#1B1F3B] text-[#FFFDF7] border ${
+                      errors.tipo_id ? "border-red-500" : "border-[#FFFDF7]/20"
+                    } rounded-lg focus:ring-4 focus:ring-[#E31B23] focus:border-transparent transition duration-200`}
                     required
-                    aria-describedby="serviceType-error"
+                    aria-describedby="tipo_id-error"
+                    aria-invalid={!!errors.tipo_id}
                     disabled={isSubmitting}
                   >
                     <option value="" disabled>
                       Selecione o tipo de serviço
                     </option>
-                    <option value="manutencao">Manutenção</option>
-                    <option value="reparo">Reparo</option>
-                    <option value="instalacao">Instalação</option>
-                    <option value="outro">Outro</option>
+                    <option value="1">Manutenção</option>
+                    <option value="2">Reparo</option>
+                    <option value="3">Instalação</option>
                   </select>
-                  {errors.serviceType && (
-                    <p id="serviceType-error" className="text-red-400 text-sm mt-1 animate-fade-in">
-                      {errors.serviceType}
+                  {errors.tipo_id && (
+                    <p id="tipo_id-error" className="text-red-400 text-sm mt-2 animate-fade-in">
+                      {errors.tipo_id}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label
-                    htmlFor="additionalDetails"
-                    className="block text-lg font-medium text-[#FFFDF7] mb-2 tooltip"
-                    data-tooltip="Forneça detalhes adicionais sobre o problema ou serviço"
+                    htmlFor="tecnico_id"
+                    className="block text-lg font-semibold text-[#FFFDF7] mb-2 tooltip"
+                    data-tooltip="Escolha um técnico para atender o chamado"
                   >
-                    Detalhes Adicionais
+                    Técnico Desejado <span className="text-[#E31B23]">*</span>
                   </label>
-                  <textarea
-                    id="additionalDetails"
-                    name="additionalDetails"
-                    value={formData.additionalDetails}
+                  <select
+                    id="tecnico_id"
+                    name="tecnico_id"
+                    value={formData.tecnico_id}
                     onChange={handleInputChange}
-                    className="w-full p-3 bg-[#1B1F3B] text-[#FFFDF7] border border-[#FFFDF7]/20 rounded-lg focus:ring-2 focus:ring-[#E31B23] focus:border-transparent transition duration-200 placeholder-[#FFFDF7]/50"
-                    rows="5"
-                    maxLength="500"
-                    aria-describedby="additionalDetails-hint"
+                    className={`w-full p-4 bg-[#1B1F3B] text-[#FFFDF7] border ${
+                      errors.tecnico_id ? "border-red-500" : "border-[#FFFDF7]/20"
+                    } rounded-lg focus:ring-4 focus:ring-[#E31B23] focus:border-transparent transition duration-200`}
+                    required
+                    aria-describedby="tecnico_id-error"
+                    aria-invalid={!!errors.tecnico_id}
                     disabled={isSubmitting}
-                  ></textarea>
-                  <p id="additionalDetails-hint" className="text-sm text-[#FFFDF7]/70 mt-1">
-                    Opcional: {formData.additionalDetails.length}/500 caracteres
-                  </p>
+                  >
+                    {Object.entries(tecnicoMap).map(([id, nome]) => (
+                      <option key={id} value={id}>
+                        {nome}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.tecnico_id && (
+                    <p id="tecnico_id-error" className="text-red-400 text-sm mt-2 animate-fade-in">
+                      {errors.tecnico_id}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-4">
                   <Link
                     href="/"
-                    className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-6 py-3 rounded-lg font-bold hover:bg-[#FFFDF7]/30 transition duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-[#FFFDF7]"
+                    className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-6 py-3 rounded-lg font-bold hover:bg-[#FFFDF7]/30 transition duration-300 focus:ring-4 focus:ring-offset-2 focus:ring-[#FFFDF7]"
                     aria-label="Cancelar"
                   >
                     Cancelar
                   </Link>
                   <button
                     type="submit"
-                    className={`bg-[#E31B23] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#C5161D] transition duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-[#E31B23] flex items-center ${
+                    className={`primary-button text-white px-6 py-3 rounded-lg font-bold flex items-center ${
                       isSubmitting ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     disabled={isSubmitting}
@@ -348,20 +439,20 @@ export default function NovoChamado() {
           </div>
         </section>
 
-        {/* Success Modal */}
+        {/* Renderizando o modal de sucesso */}
         {showSuccess && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-            <div className="bg-[#2D3250] p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+            <div className="bg-[#2D3250] p-8 rounded-xl shadow-lg max-w-md w-full text-center border-t-4 border-[#E31B23]">
               <div className="bg-[#E31B23] text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
                 ✓
               </div>
               <h3 className="text-2xl font-bold text-[#FFFDF7] mb-4">Chamado Aberto com Sucesso!</h3>
-              <p className="text-[#FFFDF7]/80 mb-6">
-                Seu chamado foi registrado. Você será notificado sobre o progresso em breve.
+              <p className="text-[#FFFDF7]/90 mb-6">
+                Seu chamado foi registrado. Acompanhe o progresso e visualize relatórios técnicos em breve.
               </p>
               <Link
                 href="/meus-chamados"
-                className="bg-[#E31B23] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#C5161D] transition duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-[#E31B23]"
+                className="primary-button text-white px-6 py-3 rounded-lg font-bold focus:ring-4 focus:ring-offset-2 focus:ring-[#E31B23]"
                 aria-label="Acompanhar chamados"
               >
                 Acompanhar Chamados
