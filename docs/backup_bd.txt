@@ -107,3 +107,5 @@ INSERT INTO pool_tecnico (id_pool, id_tecnico) VALUES
     (2, 2),  -- apoio técnico - Bruno
     (2, 3),  -- apoio técnico - Carla
     (3, 3);  -- limpeza - Carla
+
+SELECT * FROM pool_tecnico;

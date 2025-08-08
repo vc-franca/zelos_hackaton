@@ -1,15 +1,17 @@
 import { listarPoolTecnico, obterPoolTecnicoPorId, criarPoolTecnico, atualizarPoolTecnico, excluirPoolTecnico } from '../models/PoolTecnico.js';
 
+/* --------------------------------- LISTAR --------------------------------- */
 const listarPoolTecnicoController = async (req, res) => {
     try {
         const poolsTecnicos = await listarPoolTecnico();
         res.json(poolsTecnicos);
     } catch (err) {
         console.error('Erro ao listar pools técnicos: ', err);
-        res.status(500).json({ mensagem: 'Erro ao listar pools técnicos' });
+        res.status(500).json({ mensagem: 'Erro ao listar pools técnicos', err });
     }
 };
 
+/* ------------------------------ OBTER POR ID ------------------------------ */
 const obterPoolTecnicoPorIdController = async (req, res) => {
     try {
         const poolTecnico = await obterPoolTecnicoPorId(req.params.id);
@@ -22,10 +24,11 @@ const obterPoolTecnicoPorIdController = async (req, res) => {
 
     } catch (err) {
         console.error('Erro ao obter pool técnico por ID: ', err);
-        res.status().json({ mensagem: 'Erro ao obter pool técnico por ID: ' });
+        res.status(500).json({ mensagem: 'Erro ao obter pool técnico por ID: ', err });
     }
 };
 
+/* ---------------------------------- CRIAR --------------------------------- */
 const criarPoolTecnicoController = async (req, res) => {
     try {
         const { titulo, descricao, status } = req.body;
@@ -35,10 +38,11 @@ const criarPoolTecnicoController = async (req, res) => {
         res.status(201).json({ mensagem: 'Pool técnico criado com sucesso: ', poolTecnicoId });
     } catch (err) {
         console.error('Erro ao criar pool técnico: ', err);
-        res.status().json({ mensagem: 'Erro ao criar pool técnico: ' });
+        res.status(500).json({ mensagem: 'Erro ao criar pool técnico: ', err });
     }
 };
 
+/* -------------------------------- ATUALIZAR ------------------------------- */
 const atualizarPoolTecnicoController = async (req, res) => {
     try {
         const poolTecnicoId = req.params.id;
@@ -50,17 +54,21 @@ const atualizarPoolTecnicoController = async (req, res) => {
         res.status(201).json({ mensagem: 'Pool técnico atualizado com sucesso' });
     } catch (err) {
         console.error('Erro ao atualizar pool técnico: ', err);
-        res.status().json({ mensagem: 'Erro ao atualizar pool técnico: ' });
+        res.status(500).json({ mensagem: 'Erro ao atualizar pool técnico: ', err });
     }
 };
 
+/* --------------------------------- EXCLUIR -------------------------------- */
 const excluirPoolTecnicoController = async (req, res) => {
     try {
         const poolTecnicoId = req.params.id;
+
         await excluirPoolTecnico(poolTecnicoId);
+        res.status(201).json({ mensagem: 'Pool técnico excluído com sucesso' });
+
     } catch (err) {
         console.error('Erro ao excluir pool técnico: ', err);
-        res.status().json({ mensagem: 'Erro ao excluir pool técnico: ' });
+        res.status(500).json({ mensagem: 'Erro ao excluir pool técnico: ', err });
     }
 };
 
