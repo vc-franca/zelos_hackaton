@@ -9,7 +9,7 @@ import authRotas from './routes/authRotas.js'; // Rotas de Autenticação
 import chamadoRotas from './routes/chamadoRotas.js';
 import apontamentosRotas from './routes/apontamentosRotas.js';
 import poolRotas from './routes/poolRotas.js';
-import poolTecnico from './routes/poolTecnicoRotas.js';
+import poolTecnicoRotas from './routes/poolTecnicoRotas.js';
 import usuariosRotas from './routes/usuariosRotas.js';
 
 
@@ -49,7 +49,7 @@ app.use('/auth', authRotas);
 app.use('/chamados', chamadoRotas);
 app.use('/apontamentos', apontamentosRotas);
 app.use('/pool', poolRotas);
-app.use('/poolTecnico', poolTecnico);
+app.use('/poolTecnico', poolTecnicoRotas);
 app.use('/usuarios', usuariosRotas);
 
 app.get('/health', (req, res) => {

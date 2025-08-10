@@ -1,5 +1,8 @@
 import { listarPoolTecnico, obterPoolTecnicoPorId, criarPoolTecnico, atualizarPoolTecnico, excluirPoolTecnico } from '../models/PoolTecnico.js';
 
+// import do banco de dados para verificação nas funções de criar e atualizar
+import { create, readAll, read, update, deleteRecord, pool } from '../config/database.js';
+
 /* --------------------------------- LISTAR --------------------------------- */
 const listarPoolTecnicoController = async (req, res) => {
     try {
@@ -31,9 +34,21 @@ const obterPoolTecnicoPorIdController = async (req, res) => {
 /* ---------------------------------- CRIAR --------------------------------- */
 const criarPoolTecnicoController = async (req, res) => {
     try {
-        const { titulo, descricao, status } = req.body;
+        const { id_pool, id_tecnico } = req.body;
 
-        const poolTecnicoData = { titulo, descricao, status };
+        // verifica se o usuário mencionado é um técnico ou se pool existe
+        const [isTecnico] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [id_tecnico, 'tecnico']);
+        const [poolExiste] = await pool.query('SELECT id FROM pool WHERE id = ?', [id_pool]);
+
+        if (!isTecnico.length) {
+            return res.status(404).json({ mensagem: 'Usuário inexistente ou não é técnico' });
+        }
+
+        if (!poolExiste.length) {
+            return res.status(404).json({ mensagem: 'Pool inexistente' });
+        }
+
+        const poolTecnicoData = { id_pool, id_tecnico };
         const poolTecnicoId = await criarPoolTecnico(poolTecnicoData);
         res.status(201).json({ mensagem: 'Pool técnico criado com sucesso: ', poolTecnicoId });
     } catch (err) {
@@ -46,9 +61,21 @@ const criarPoolTecnicoController = async (req, res) => {
 const atualizarPoolTecnicoController = async (req, res) => {
     try {
         const poolTecnicoId = req.params.id;
-        const { titulo, descricao, status } = req.body;
+        const { id_pool, id_tecnico } = req.body;
 
-        const poolTecnicoData = { titulo, descricao, status };
+        // verifica se o usuário mencionado é um técnico ou se pool existe
+        const [isTecnico] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [id_tecnico, 'tecnico']);
+        const [poolExiste] = await pool.query('SELECT id FROM pool WHERE id = ?', [id_pool]);
+
+        if (!isTecnico.length) {
+            return res.status(404).json({ mensagem: 'Usuário inexistente ou não é técnico' });
+        }
+
+        if (!poolExiste.length) {
+            return res.status(404).json({ mensagem: 'Pool inexistente' });
+        }
+
+        const poolTecnicoData = { id_pool, id_tecnico };
 
         await atualizarPoolTecnico(poolTecnicoId, poolTecnicoData);
         res.status(201).json({ mensagem: 'Pool técnico atualizado com sucesso' });

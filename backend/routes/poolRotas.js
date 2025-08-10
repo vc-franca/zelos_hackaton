@@ -1,3 +1,5 @@
+/* ---------------------- ROTAS FUNCIONANDO COM SUCESSO --------------------- */
+
 import express from 'express';
 import {
   listarPoolController,
@@ -13,6 +15,6 @@ router.get('/', listarPoolController);
 router.get('/:id', obterPoolPorIdController);
 router.post('/', criarPoolController);
 router.put('/:id', atualizarPoolController);
-router.delete(':id', excluirPoolController);
+router.delete('/:id', excluirPoolController);
 
 export default router;

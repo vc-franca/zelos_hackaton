@@ -1,5 +1,8 @@
 import { listarPool, obterPoolPorId, criarPool, atualizarPool, excluirPool } from '../models/Pool.js';
 
+// import do banco de dados para verificação nas funções de criar e atualizar
+import { create, readAll, read, update, deleteRecord, pool } from '../config/database.js';
+
 /* --------------------------------- LISTAR --------------------------------- */
 const listarPoolController = async (req, res) => {
     try {
@@ -31,9 +34,17 @@ const obterPoolPorIdController = async (req, res) => {
 /* ---------------------------------- CRIAR --------------------------------- */
 const criarPoolController = async (req, res) => {
     try {
-        const { titulo, descricao, status } = req.body;
+        const { titulo, descricao, created_by, updated_by } = req.body;
 
-        const poolData = { titulo, descricao, status };
+        // verifica se os admins que criaram / fizeram update existem
+        const [criadorExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [created_by, 'administrador']);
+        const [updaterExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [updated_by, 'administrador']);
+
+        if (!criadorExiste.length || !updaterExiste.length) {
+            return res.status(404).json({ mensagem: 'Criador inexistente ou não é administrador' });
+        }
+
+        const poolData = { titulo, descricao, created_by, updated_by };
         const poolId = await criarPool(poolData);
         res.status(201).json({ mensagem: 'Pool criado com sucesso: ', poolId });
     } catch (err) {
@@ -46,9 +57,17 @@ const criarPoolController = async (req, res) => {
 const atualizarPoolController = async (req, res) => {
     try {
         const poolId = req.params.id;
-        const { titulo, descricao, status } = req.body;
+        const { titulo, descricao, created_by, updated_by } = req.body;
 
-        const poolData = { titulo, descricao, status };
+        // verifica se os admins que criaram / fizeram update existem
+        const [criadorExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [created_by, 'administrador']);
+        const [updaterExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [updated_by, 'administrador']);
+
+        if (!criadorExiste.length || !updaterExiste.length) {
+            return res.status(404).json({ mensagem: 'Criador inexistente ou não é administrador' });
+        }
+
+        const poolData = { titulo, descricao, created_by, updated_by };
 
         await atualizarPool(poolId, poolData);
         res.status(201).json({ mensagem: 'Pool atualizado com sucesso' });
