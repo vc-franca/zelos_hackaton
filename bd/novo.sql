@@ -80,6 +80,7 @@ INSERT INTO usuarios (nome, senha, email, funcao, estado) VALUES
     ('Carla Dias',    'senha123', 'carla@teste.com',   'tecnico',       'ativo'),
     ('Daniela Lima',  'senha123', 'daniela@teste.com', 'usuario',       'ativo'),
     ('Eduardo Nunes', 'senha123', 'eduardo@teste.com', 'usuario',       'ativo');
+    select * from usuarios;
 
 -- Pool (tipos de chamados)
 INSERT INTO pool (titulo, descricao, created_by, updated_by) VALUES

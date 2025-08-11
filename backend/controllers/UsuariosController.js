@@ -1,5 +1,8 @@
 import { listarUsers, obterUserPorId, criarUser, atualizarUser, excluirUser } from '../models/Usuarios.js';
 
+// import do banco de dados para verificação nas funções de criar e atualizar
+import { create, readAll, read, update, deleteRecord, pool } from '../config/database.js';
+
 /* --------------------------------- LISTAR --------------------------------- */
 const listarUsuariosController = async (req, res) => {
     try {
@@ -31,10 +34,15 @@ const obterUsuarioPorIdController = async (req, res) => {
 /* --------------------------------- CRIAR --------------------------------- */
 const criarUsuarioController = async (req, res) => {
     try {
-        const { titulo, descricao, status } = req.body;
+        const { nome, senha, email, funcao, estado } = req.body;
 
-        const usuarioData = { titulo, descricao, status };
+        // Gera hash automaticamente
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(senha, salt);
+
+        const usuarioData = { nome, senha: hashedPassword, email, funcao, estado };
         const usuarioId = await criarUser(usuarioData);
+        
         res.status(201).json({ mensagem: 'Usuário criado com sucesso: ', usuarioId });
     } catch (err) {
         console.error('Erro ao criar usuário: ', err);
