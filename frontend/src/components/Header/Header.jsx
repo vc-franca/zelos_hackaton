@@ -1,212 +1,171 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image'; // Importa o componente Image do Next.js
+import { Menu, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-export default function Header() {
+export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
 
+  const router = useRouter();
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const navRef = useRef(null);
+
+  // Medir altura da navbar e aplicar padding-top no body
   useEffect(() => {
-    const userData = localStorage.getItem("usuario");
-    if (userData) {
-      const user = JSON.parse(userData);
-      setUserName(user.nome);
-    }
-
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+    const updateNavHeight = () => {
+      if (navRef.current) {
+        const height = navRef.current.offsetHeight;
+        document.body.style.paddingTop = `${height}px`;
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    updateNavHeight();
+    window.addEventListener('resize', updateNavHeight);
+
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener('resize', updateNavHeight);
+      document.body.style.paddingTop = '';
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("usuario");
-    window.location.href = "/";
+  // Esconder/mostrar a navbar com base no scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setShowNavbar(false);
+      } else {
+        setShowNavbar(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
+  // Fechar menu ao clicar fora
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        isOpen &&
+        !event.target.closest('.menu-panel') &&
+        !event.target.closest('.menu-toggle')
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isOpen]);
+
+  // Navegar com fechamento de menu
+  const handleNavigation = (path) => {
+    setIsOpen(false);
+    router.push(path);
   };
 
   return (
-    <header className="bg-[#FFFDF7] text-[#1B1F3B] w-full border-b shadow-sm z-40 relative">
-      <div className="max-w-screen-xl mx-auto flex items-center justify-between px-4 h-16 lg:h-20">
-        {/* Botão Mobile */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="lg:hidden flex flex-col items-center justify-center p-2 rounded-md hover:bg-[#1B1F3B]/10 transition-colors"
-          aria-label="Abrir menu"
-        >
-          <span className="w-6 h-0.5 bg-[#1B1F3B] rounded-full" />
-          <span className="w-6 h-0.5 bg-[#1B1F3B] rounded-full mt-1.5" />
-          <span className="w-6 h-0.5 bg-[#1B1F3B] rounded-full mt-1.5" />
-        </button>
-
-        {/* Logo */}
-        <Link href="/logo.png" className="flex items-center h-full mx-auto lg:mx-0">
-          <img
-            src="/logo-manutencao-escolar.png"
-            alt="Logo Sistema de Manutenção"
-            className="h-10 lg:h-12 w-auto object-contain"
-          />
-        </Link>
-
-        {/* Menu Desktop */}
-        <div className="hidden lg:flex items-center justify-center flex-1">
-          <nav>
-            <ul className="flex gap-8 text-base font-medium items-center">
-              {[
-                ["Início", "/"],
-                ["Meus Chamados", "/meus-chamados"],
-                ["Relatórios", "/relatorios"],
-              ].map(([label, href]) => (
-                <li key={label}>
-                  <Link
-                    href={href}
-                    className="relative group block px-2 py-2 text-[#1B1F3B] hover:text-[#E31B23] transition-colors"
-                  >
-                    {label}
-                    <span className="absolute left-1/2 -bottom-1 w-0 h-[2px] bg-[#E31B23] transition-all duration-300 group-hover:w-full group-hover:left-0" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-
-        {/* Área do usuário */}
-        <div className="flex items-center gap-4">
-          {userName && (
-            <>
-              {/* Versão Desktop */}
-              <div className="hidden lg:block relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 text-[#1B1F3B] font-medium hover:text-[#E31B23] transition-colors"
-                >
-                  <span>Olá, {userName}</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <Link
-                      href="/perfil"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#E31B23] hover:text-white transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
-                    >
-                      Meu Perfil
-                    </Link>
-                    <Link
-                      href="/configuracoes"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#E31B23] hover:text-white transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
-                    >
-                      Configurações
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#E31B23] hover:text-white transition-colors"
-                    >
-                      Sair
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Versão Mobile - Ícone de perfil */}
-              <Link
-                href="/perfil"
-                className="lg:hidden flex items-center justify-center p-2 rounded-full hover:bg-[#1B1F3B]/10"
-                aria-label="Meu perfil"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-[#1B1F3B] hover:text-[#E31B23]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </Link>
-            </>
-          )}
-          
-          {/* Botão "Novo Chamado" */}
-          <Link
-            href="/novo-chamado"
-            className="px-4 py-3 bg-[#E31B23] text-white rounded-lg hover:bg-[#C5161D] transition duration-300 shadow-md hover:shadow-lg whitespace-nowrap font-bold"
-          >
-            Novo Chamado
-          </Link>
-        </div>
-      </div>
-
-      {/* Menu Mobile Expandido */}
+    <>
       <nav
-        className={`lg:hidden transition-all duration-500 overflow-hidden bg-[#FFFDF7] border-t border-gray-200 ${
-          isOpen ? "max-h-screen py-4" : "max-h-0 py-0"
+        ref={navRef}
+        className={`fixed top-0 left-0 right-0 z-50 bg-white shadow-md transition-transform duration-200 ${
+          showNavbar ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
-        <ul className="flex flex-col gap-4 text-base font-medium px-5">
-          {[
-            ["Início", "/"],
-            ["Meus Chamados", "/meus-chamados"],
-            ["Relatórios", "/relatorios"],
-            ["Meu Perfil", "/perfil"],
-            ["Configurações", "/configuracoes"],
-          ].map(([label, href]) => (
-            <li key={label}>
-              <Link
-                href={href}
-                className="block py-3 px-2 text-[#1B1F3B] hover:text-[#E31B23] transition-colors border-b border-gray-100"
-                onClick={() => setIsOpen(false)}
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
-          {userName && (
-            <li>
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setIsOpen(false);
-                }}
-                className="w-full text-left py-3 px-2 text-[#1B1F3B] hover:text-[#E31B23] transition-colors border-b border-gray-100"
-              >
-                Sair
-              </button>
-            </li>
-          )}
-        </ul>
+        <div className="flex items-center justify-between px-4 py-3 relative">
+          {/* Botão hambúrguer à esquerda */}
+          <button
+            className="menu-toggle flex flex-col justify-center text-black items-center w-8 h-8 focus:outline-none"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
+          >
+            {isOpen ? (
+              <X size={24} />
+            ) : (
+              <Menu size={24} />
+            )}
+          </button>
+
+          {/* Logo centralizado clicável */}
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 cursor-pointer flex items-center"
+            onClick={() => router.push('/')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') router.push('/'); }}
+          >
+            <Image
+              src="/logo.svg"
+              alt="Logo"
+              width={140}
+              height={140}
+              priority
+            />
+          </div>
+
+          {/* Espaço vazio à direita para balancear */}
+          <div className="w-8" />
+        </div>
       </nav>
-    </header>
+
+      {/* Fundo quando menu aberto */}
+      <div className="relative z-40">
+        {isOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+
+        {/* Menu lateral esquerdo */}
+        <div
+          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out menu-panel z-50 ${
+            isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex justify-end p-4">
+            <button
+              onClick={() => setIsOpen(false)}
+              aria-label="Fechar menu"
+              className="text-black hover:text-yellow-600 transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          <ul className="px-6 py-4 space-y-4">
+            <li
+              className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
+              onClick={() => handleNavigation('/')}
+            >
+              Início
+            </li>
+            <li
+              className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
+              onClick={() => handleNavigation('/PaginaProdutos')}
+            >
+              Produtos
+            </li>
+            <li
+              className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
+              onClick={() => handleNavigation('/carrinho')}
+            >
+              Carrinho
+            </li>
+            <li
+              className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
+              onClick={() => handleNavigation('/FormLoginRegister')}
+            >
+              Entrar
+            </li>
+          </ul>
+        </div>
+      </div>
+    </>
   );
 }
