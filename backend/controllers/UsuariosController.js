@@ -1,18 +1,23 @@
-import { listarUsuario, obterUsuarioPorId, criarUsuario, atualizarUsuario, excluirUsuario } from '../models/Usuarios';
+import { listarUsers, obterUserPorId, criarUser, atualizarUser, excluirUser } from '../models/Usuarios.js';
 
-const listarUsuarioController = async (req, res) => {
+// import do banco de dados para verificação nas funções de criar e atualizar
+import { create, readAll, read, update, deleteRecord, pool } from '../config/database.js';
+
+/* --------------------------------- LISTAR --------------------------------- */
+const listarUsuariosController = async (req, res) => {
     try {
-        const usuarios = await listarUsuario();
+        const usuarios = await listarUsers();
         res.json(usuarios);
     } catch (err) {
         console.error('Erro ao listar usuários: ', err);
-        res.status(500).json({ mensagem: 'Erro ao listar usuários' });
+        res.status(500).json({ mensagem: 'Erro ao listar usuários', err });
     }
 };
 
+/* ------------------------------ OBTER POR ID ------------------------------ */
 const obterUsuarioPorIdController = async (req, res) => {
     try {
-        const usuario = await obterUsuarioPorId(req.params.id);
+        const usuario = await obterUserPorId(req.params.id);
 
         if (usuario) {
             res.json(usuario);
@@ -22,23 +27,30 @@ const obterUsuarioPorIdController = async (req, res) => {
 
     } catch (err) {
         console.error('Erro ao obter usuário por ID: ', err);
-        res.status().json({ mensagem: 'Erro ao obter usuário por ID: ' });
+        res.status(500).json({ mensagem: 'Erro ao obter usuário por ID: ', err });
     }
 };
 
+/* --------------------------------- CRIAR --------------------------------- */
 const criarUsuarioController = async (req, res) => {
     try {
-        const { titulo, descricao, status } = req.body;
+        const { nome, senha, email, funcao, estado } = req.body;
 
-        const usuarioData = { titulo, descricao, status };
-        const usuarioId = await criarUsuario(usuarioData);
+        // Gera hash automaticamente
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(senha, salt);
+
+        const usuarioData = { nome, senha: hashedPassword, email, funcao, estado };
+        const usuarioId = await criarUser(usuarioData);
+        
         res.status(201).json({ mensagem: 'Usuário criado com sucesso: ', usuarioId });
     } catch (err) {
         console.error('Erro ao criar usuário: ', err);
-        res.status().json({ mensagem: 'Erro ao criar usuário: ' });
+        res.status(500).json({ mensagem: 'Erro ao criar usuário: ', err });
     }
 };
 
+/* -------------------------------- ATUALIZAR ------------------------------- */
 const atualizarUsuarioController = async (req, res) => {
     try {
         const usuarioId = req.params.id;
@@ -46,26 +58,30 @@ const atualizarUsuarioController = async (req, res) => {
 
         const usuarioData = { titulo, descricao, status };
 
-        await atualizarUsuario(usuarioId, usuarioData);
+        await atualizarUser(usuarioId, usuarioData);
         res.status(201).json({ mensagem: 'Usuário atualizado com sucesso' });
     } catch (err) {
         console.error('Erro ao atualizar usuário: ', err);
-        res.status().json({ mensagem: 'Erro ao atualizar usuário: ' });
+        res.status(500).json({ mensagem: 'Erro ao atualizar usuário: ', err });
     }
 };
 
+/* --------------------------------- EXCLUIR -------------------------------- */
 const excluirUsuarioController = async (req, res) => {
     try {
         const usuarioId = req.params.id;
-        await excluirUsuario(usuarioId);
+
+        await excluirUser(usuarioId);
+        res.status(201).json({ mensagem: 'Usuário excluído com sucesso' });
+
     } catch (err) {
         console.error('Erro ao excluir usuário: ', err);
-        res.status().json({ mensagem: 'Erro ao excluir usuário: ' });
+        res.status(500).json({ mensagem: 'Erro ao excluir usuário: ', err });
     }
 };
 
 export {
-    listarUsuarioController,
+    listarUsuariosController,
     obterUsuarioPorIdController,
     criarUsuarioController,
     atualizarUsuarioController,

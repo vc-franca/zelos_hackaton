@@ -27,7 +27,7 @@ const criarChamado = async (chamadoData) => {
   }
 };
 
-const atualizarChamado = async (id, livroData) => {
+const atualizarChamado = async (id, chamadoData) => {
   try {
     await update('chamados', chamadoData, `id = ${id}`);
   } catch (error) {

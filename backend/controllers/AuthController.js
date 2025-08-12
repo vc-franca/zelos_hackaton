@@ -2,6 +2,8 @@ import jwt from 'jsonwebtoken';
 import { read, compare } from '../config/database.js';
 import { JWT_SECRET } from '../config/jwt.js'; // Importar a chave secreta
 
+
+/* ---------------------------------- LOGIN --------------------------------- */
 const loginController = async (req, res) => {
   const { email, senha } = req.body;
 
@@ -30,4 +32,46 @@ const loginController = async (req, res) => {
   }
 };
 
-export { loginController };
+/* --------------------------------- LOGOUT --------------------------------- */
+const logoutController = async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Nenhum usuário autenticado' });
+  }
+
+  console.log('Usuário deslogando:', req.user?.username);
+
+  req.logout((err) => {
+    if (err) {
+      console.error('Erro no logout:', err);
+      return res.status(500).json({ error: 'Erro ao realizar logout' });
+    }
+
+    // Destrói a sessão completamente
+    req.session.destroy((destroyErr) => {
+      if (destroyErr) {
+        console.error('Erro ao destruir sessão:', destroyErr);
+        return res.status(500).json({ error: 'Erro ao encerrar sessão' });
+      }
+
+      res.clearCookie('connect.sid'); // Remove o cookie de sessão
+      res.json({ message: 'Logout realizado com sucesso' });
+    });
+  });
+};
+
+/* ------------------------------- CHECK-AUTH ------------------------------- */
+// checa a autenticação
+const checkAuthController = (req, res) => {
+  if (req.isAuthenticated()) {
+    return res.json({
+      authenticated: true,
+      user: {
+        username: req.user.username,
+        displayName: req.user.displayName
+      }
+    });
+  }
+  res.status(401).json({ authenticated: false });
+};
+
+export { loginController, logoutController, checkAuthController };

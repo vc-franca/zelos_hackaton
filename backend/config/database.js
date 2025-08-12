@@ -118,4 +118,4 @@ async function compare(senha, hash) {
     }
 }
 
-export { create, readAll, read, update, deleteRecord, compare };
+export { create, readAll, read, update, deleteRecord, compare, pool };

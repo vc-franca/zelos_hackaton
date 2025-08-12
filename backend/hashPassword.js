@@ -17,6 +17,7 @@ async function generateHashedPasswords() {
   try {
     await generateHash('ADMIN', process.env.SENHA_ADMIN);
     await generateHash('USER', process.env.SENHA_USER);
+    await generateHash('teste', 'senha123')
 
     process.exit(0); // Encerra o processo após exibir o hash
   } catch (error) {
