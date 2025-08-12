@@ -147,22 +147,17 @@ export default function Navbar() {
             </li>
             <li
               className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
-              onClick={() => handleNavigation('/PaginaProdutos')}
+              onClick={() => handleNavigation('/meus-chamados')}
             >
-              Produtos
+              meus Chamados
             </li>
             <li
               className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
-              onClick={() => handleNavigation('/carrinho')}
+              onClick={() => handleNavigation('/novo-chamado')}
             >
-              Carrinho
+              Criar Chamado
             </li>
-            <li
-              className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
-              onClick={() => handleNavigation('/FormLoginRegister')}
-            >
-              Entrar
-            </li>
+            
           </ul>
         </div>
       </div>

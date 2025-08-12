@@ -1,104 +1,101 @@
-// Habilitando renderização no lado do cliente para interatividade com React hooks e gerenciamento de estado
 "use client";
 
-// Importando dependências necessárias para a construção da página
 import Link from "next/link";
 import Head from "next/head";
 import { useState, useEffect } from "react";
+import axios from "axios";
 
-// Definindo mapeamento de tipo_id para nomes legíveis, consistente com meus-chamados.jsx
-const tipoMap = {
-  1: "Manutenção",
-  2: "Reparo",
-  3: "Instalação",
-};
-
-// Definindo mapeamento de tecnico_id para nomes legíveis, consistente com meus-chamados.jsx
 const tecnicoMap = {
   1: "João Silva",
   2: "Maria Oliveira",
   3: "Carlos Souza",
 };
 
-// Definindo o componente principal para abertura de novos chamados
 export default function NovoChamado() {
-  // Gerenciando o estado do formulário com os dados do chamado
   const [formData, setFormData] = useState({
     titulo: "",
     numeroPatrimonio: "",
     descricao: "",
     tipo_id: "",
-    tecnico_id: "1", // Definindo valor padrão para técnico_id
+    tecnico_id: "1",
   });
-  // Gerenciando os erros de validação do formulário
   const [errors, setErrors] = useState({});
-  // Controlando o estado de envio do formulário
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Controlando a visibilidade do modal de sucesso
   const [showSuccess, setShowSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [tipos, setTipos] = useState([]);
 
-  // Validando os campos do formulário
+  useEffect(() => {
+    async function fetchTipos() {
+      try {
+        const response = await axios.get("http://localhost:8080/pool"); // Sua API retorna os tipos
+        setTipos(response.data);
+      } catch (error) {
+        console.error("Erro ao carregar tipos:", error);
+        setTipos([]);
+      }
+    }
+    fetchTipos();
+  }, []);
+
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.titulo.trim()) {
-      newErrors.titulo = "O título é obrigatório.";
-    }
-    if (!formData.numeroPatrimonio.match(/^[A-Z0-9-]{3,10}$/)) {
-      newErrors.numeroPatrimonio = "O número de patrimônio deve ter 3-10 caracteres alfanuméricos.";
-    }
-    if (!formData.descricao.trim()) {
-      newErrors.descricao = "A descrição é obrigatória.";
-    }
-    if (!formData.tipo_id) {
-      newErrors.tipo_id = "Selecione um tipo de serviço.";
-    }
-    if (!formData.tecnico_id) {
-      newErrors.tecnico_id = "Selecione um técnico.";
-    }
+    if (!formData.titulo.trim()) newErrors.titulo = "O título é obrigatório.";
+    if (!formData.numeroPatrimonio.match(/^[A-Z0-9-]{3,10}$/))
+      newErrors.numeroPatrimonio =
+        "O número de patrimônio deve ter 3-10 caracteres alfanuméricos.";
+    if (!formData.descricao.trim()) newErrors.descricao = "A descrição é obrigatória.";
+    if (!formData.tipo_id) newErrors.tipo_id = "Selecione um tipo de serviço.";
+    if (!formData.tecnico_id) newErrors.tecnico_id = "Selecione um técnico.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Manipulando mudanças nos campos do formulário
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+    setSubmitError(null);
   };
 
-  // Manipulando o envio do formulário
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      setIsSubmitting(true);
-      setTimeout(() => {
-        // Simulando envio para backend com dados alinhados à tabela chamados
-        const newTicket = {
-          id: Math.max(...mockTickets.map((t) => t.id), 0) + 1, // Incremento simples para ID
-          titulo: formData.titulo,
-          descricao: `Patrimônio: ${formData.numeroPatrimonio} - Descrição: ${formData.descricao}`, // Combinando número de patrimônio e descrição
-          tipo_id: parseInt(formData.tipo_id),
-          tecnico_id: parseInt(formData.tecnico_id), // Técnico é obrigatório
-          usuario_id: 101, // Usuário fixo para mock
-          status: "pendente",
-          criado_em: new Date().toISOString(),
-          notes: [],
-        };
-        console.log("Novo chamado submetido:", newTicket); // Placeholder para integração futura
-        setIsSubmitting(false);
-        setShowSuccess(true);
-        setFormData({
-          titulo: "",
-          numeroPatrimonio: "",
-          descricao: "",
-          tipo_id: "",
-          tecnico_id: "1", // Redefinindo valor padrão após envio
-        });
-      }, 1000);
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    const nowISO = new Date().toISOString();
+
+    const payload = {
+      titulo: formData.titulo,
+      descricao: `Patrimônio: ${formData.numeroPatrimonio} - ${formData.descricao}`,
+      tipo_id: parseInt(formData.tipo_id, 10),
+      tecnico_id: parseInt(formData.tecnico_id, 10),
+      usuario_id: 4, // fixo conforme exemplo
+      estado: "pendente",
+      criado_em: nowISO,
+      atualizado_em: nowISO,
+    };
+
+    try {
+      await axios.post("http://localhost:8080/chamados", payload);
+      setShowSuccess(true);
+      setFormData({
+        titulo: "",
+        numeroPatrimonio: "",
+        descricao: "",
+        tipo_id: "",
+        tecnico_id: "1",
+      });
+    } catch (error) {
+      console.error("Erro ao enviar chamado:", error);
+      setSubmitError("Erro ao enviar chamado. Tente novamente mais tarde.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Configurando temporizador para fechar o modal de sucesso
   useEffect(() => {
     if (showSuccess) {
       const timer = setTimeout(() => setShowSuccess(false), 3000);
@@ -106,10 +103,8 @@ export default function NovoChamado() {
     }
   }, [showSuccess]);
 
-  // Renderizando a interface do componente
   return (
     <>
-      {/* Configurando metadados da página para SEO e acessibilidade */}
       <Head>
         <title>Abrir Novo Chamado | Sistema de Manutenção Escolar</title>
         <meta
@@ -118,94 +113,7 @@ export default function NovoChamado() {
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      {/* Definindo estilos globais para animações, tooltips e estados de formulário */}
-      <style jsx global>{`
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        .animate-slide-up {
-          animation: slide-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        .tooltip {
-          position: relative;
-        }
-        .tooltip:hover::after {
-          content: attr(data-tooltip);
-          position: absolute;
-          bottom: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #fffdf7;
-          color: #1b1f3b;
-          padding: 8px 12px;
-          border-radius: 4px;
-          font-size: 0.875rem;
-          white-space: nowrap;
-          z-index: 10;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        input:disabled,
-        select:disabled,
-        textarea:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        .primary-button {
-          background: linear-gradient(145deg, #e31b23, #c5161d);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .primary-button:hover:not(:disabled),
-        .primary-button:focus:not(:disabled) {
-          transform: scale(1.05);
-          box-shadow: 0 0 8px rgba(227, 27, 35, 0.5);
-        }
-        @media (max-width: 639px) {
-          .form-container {
-            padding: 16px;
-          }
-          .tooltip:hover::after {
-            font-size: 0.75rem;
-            padding: 6px 10px;
-          }
-        }
-        @media (min-width: 640px) and (max-width: 1023px) {
-          .form-container {
-            padding: 20px;
-          }
-          .tooltip:hover::after {
-            font-size: 0.875rem;
-            padding: 8px 12px;
-          }
-        }
-        @media (min-width: 1024px) {
-          .form-container {
-            padding: 24px;
-          }
-        }
-      `}</style>
-      {/* Renderizando o contêiner principal da página */}
       <div className="min-h-screen bg-[#FFFDF7] font-sans">
-        {/* Renderizando a seção de cabeçalho com título e navegação */}
         <section className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7] py-16 px-4">
           <div className="max-w-6xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-slide-up">
@@ -227,12 +135,12 @@ export default function NovoChamado() {
           </div>
         </section>
 
-        {/* Renderizando a seção do formulário */}
         <section className="py-20 px-4">
           <div className="max-w-3xl mx-auto">
             <div className="bg-[#2D3250] form-container rounded-xl shadow-lg border-t-4 border-[#E31B23] animate-slide-up">
               <h2 className="text-3xl font-bold text-[#FFFDF7] mb-6">Formulário de Novo Chamado</h2>
               <form onSubmit={handleSubmit} className="space-y-8" noValidate aria-live="polite">
+                {/* Título */}
                 <div>
                   <label
                     htmlFor="titulo"
@@ -262,6 +170,7 @@ export default function NovoChamado() {
                   )}
                 </div>
 
+                {/* Número de Patrimônio */}
                 <div>
                   <label
                     htmlFor="numeroPatrimonio"
@@ -291,6 +200,7 @@ export default function NovoChamado() {
                   )}
                 </div>
 
+                {/* Descrição */}
                 <div>
                   <label
                     htmlFor="descricao"
@@ -320,6 +230,7 @@ export default function NovoChamado() {
                   )}
                 </div>
 
+                {/* Tipo de Serviço */}
                 <div>
                   <label
                     htmlFor="tipo_id"
@@ -344,9 +255,11 @@ export default function NovoChamado() {
                     <option value="" disabled>
                       Selecione o tipo de serviço
                     </option>
-                    <option value="1">Manutenção</option>
-                    <option value="2">Reparo</option>
-                    <option value="3">Instalação</option>
+                    {tipos.map((tipo) => (
+                      <option key={tipo.id} value={tipo.id}>
+                        {tipo.titulo}
+                      </option>
+                    ))}
                   </select>
                   {errors.tipo_id && (
                     <p id="tipo_id-error" className="text-red-400 text-sm mt-2 animate-fade-in">
@@ -355,6 +268,7 @@ export default function NovoChamado() {
                   )}
                 </div>
 
+                {/* Técnico */}
                 <div>
                   <label
                     htmlFor="tecnico_id"
@@ -388,6 +302,11 @@ export default function NovoChamado() {
                     </p>
                   )}
                 </div>
+
+                {/* Erro geral no envio */}
+                {submitError && (
+                  <p className="text-red-500 font-semibold animate-fade-in">{submitError}</p>
+                )}
 
                 <div className="flex justify-end gap-4">
                   <Link
@@ -439,7 +358,6 @@ export default function NovoChamado() {
           </div>
         </section>
 
-        {/* Renderizando o modal de sucesso */}
         {showSuccess && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
             <div className="bg-[#2D3250] p-8 rounded-xl shadow-lg max-w-md w-full text-center border-t-4 border-[#E31B23]">
