@@ -61,6 +61,15 @@ const atualizarChamadoController = async (req, res) => {
         const chamadoId = req.params.id
         const { titulo, descricao, tipo_id, tecnico_id, usuario_id, estado } = req.body;
 
+        // verifica se chamado e técnico existem
+        const [poolExiste] = await pool.query('SELECT id FROM pool WHERE id = ?', [tipo_id]);
+        const [tecnicoExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [tecnico_id, 'tecnico']);
+        const [usuarioExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [usuario_id, 'usuario']);
+
+        if (!poolExiste.length || !tecnicoExiste.length || usuarioExiste.length) {
+            return res.status(404).json({ mensagem: 'Tipo, técnico ou usuário não encontrados' });
+        }
+
         const chamadoData = { titulo, descricao, tipo_id, tecnico_id, usuario_id, estado }
 
         await atualizarChamado(chamadoId, chamadoData);
