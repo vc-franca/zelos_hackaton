@@ -1,324 +1,107 @@
-// Habilitando renderização no lado do cliente para interatividade com React hooks
 "use client";
 
-// Importando dependências necessárias para a construção da página
 import Link from "next/link";
 import Head from "next/head";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-// Definindo dados simulados para os chamados, refletindo a estrutura da tabela `chamados`
-const mockTickets = [
-  {
-    id: 1,
-    titulo: "Problema no Computador",
-    descricao: "Patrimônio: PC123 - Descrição: Computador não liga, tela preta.",
-    tipo_id: 1, // Mapeado como "Manutenção"
-    tecnico_id: 1, // Mapeado como "João Silva"
-    usuario_id: 101,
-    status: "pendente",
-    criado_em: "2025-08-01T10:00:00",
-    notes: [],
-  },
-  {
-    id: 2,
-    titulo: "Projetor com Falha",
-    descricao: "Patrimônio: PJ456 - Descrição: Projetor não exibe imagem, possível problema no cabo HDMI.",
-    tipo_id: 2, // Mapeado como "Reparo"
-    tecnico_id: 2, // Mapeado como "Maria Oliveira"
-    usuario_id: 101,
-    status: "em andamento",
-    criado_em: "2025-08-02T14:30:00",
-    notes: ["Verificado cabo HDMI, substituição recomendada - 2025-08-03"],
-  },
-  {
-    id: 3,
-    titulo: "Instalação de Impressora",
-    descricao: "Patrimônio: IM789 - Descrição: Necessária instalação de nova impressora na sala 202.",
-    tipo_id: 3, // Mapeado como "Instalação"
-    tecnico_id: 3, // Mapeado como "Carlos Souza"
-    usuario_id: 101,
-    status: "concluído",
-    criado_em: "2025-07-30T09:15:00",
-    notes: ["Instalação concluída, drivers atualizados - 2025-07-31"],
-  },
-];
-
-// Mapeando tipo_id para nomes legíveis
+// Mapeamento de tipo e técnico
 const tipoMap = {
   1: "Manutenção",
   2: "Reparo",
   3: "Instalação",
 };
 
-// Mapeando tecnico_id para nomes legíveis
 const tecnicoMap = {
   1: "João Silva",
   2: "Maria Oliveira",
   3: "Carlos Souza",
 };
 
-// Função para parsear descrição em número de patrimônio e texto descritivo
+// Função para extrair número de patrimônio e descrição
 const parseDescricao = (descricao) => {
-  const match = descricao.match(/Patrimônio: ([A-Z0-9-]+) - Descrição: (.*)/);
+  const match = descricao?.match(/Patrimônio: ([A-Z0-9-]+) - Descrição: (.*)/);
   return match
     ? { numeroPatrimonio: match[1], descricaoText: match[2] }
     : { numeroPatrimonio: "N/A", descricaoText: descricao };
 };
 
-// Definindo o componente principal para visualização de chamados do usuário
 export default function MeusChamados() {
-  // Gerenciando o estado dos chamados com dados simulados
-  const [tickets, setTickets] = useState(mockTickets);
-  // Controlando a visibilidade do modal de visualização de relatórios
+  const [tickets, setTickets] = useState([]);
   const [showNotesModal, setShowNotesModal] = useState(false);
-  // Armazenando o chamado selecionado para visualização
   const [selectedTicket, setSelectedTicket] = useState(null);
 
-  // Renderizando a interface do componente
+  // Buscar chamados da API usando axios
+  useEffect(() => {
+    const fetchChamados = async () => {
+      try {
+        const { data } = await axios.get("http://localhost:8080/chamados");
+        setTickets(data);
+      } catch (err) {
+        console.error("Erro ao buscar chamados:", err);
+      }
+    };
+
+    fetchChamados();
+  }, []);
+
   return (
     <>
-      {/* Configurando metadados da página para SEO e acessibilidade */}
       <Head>
         <title>Meus Chamados | Sistema de Manutenção Escolar</title>
         <meta
           name="description"
           content="Acompanhe o status dos seus chamados de manutenção e visualize relatórios técnicos."
         />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      {/* Definindo estilos globais para animações, tooltips e responsividade */}
-      <style jsx global>{`
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        .animate-slide-up {
-          animation: slide-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        .tooltip {
-          position: relative;
-        }
-        .tooltip:hover::after {
-          content: attr(data-tooltip);
-          position: absolute;
-          bottom: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #fffdf7;
-          color: #1b1f3b;
-          padding: 6px 10px;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          white-space: nowrap;
-          z-index: 10;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .ticket-card {
-          background: linear-gradient(145deg, #2d3250, #1b1f3b);
-          border: 1px solid rgba(255, 253, 247, 0.1);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .ticket-card:hover {
-          transform: translateY(-4px) scale(1.01);
-          box-shadow: 0 4px 12px rgba(227, 27, 35, 0.2);
-        }
-        @media (max-width: 639px) {
-          .ticket-card {
-            padding: 14px;
-            font-size: 0.875rem;
-          }
-          .tooltip:hover::after {
-            font-size: 0.7rem;
-            padding: 5px 8px;
-          }
-        }
-        @media (min-width: 640px) and (max-width: 1023px) {
-          .ticket-card {
-            padding: 18px;
-            font-size: 0.9375rem;
-          }
-          .tooltip:hover::after {
-            font-size: 0.75rem;
-            padding: 6px 10px;
-          }
-        }
-        @media (min-width: 1024px) {
-          .table-container table {
-            border-collapse: separate;
-            border-spacing: 0 12px;
-          }
-          .table-container th {
-            position: sticky;
-            top: 0;
-            background: linear-gradient(145deg, #1b1f3b, #2d3250);
-            z-index: 10;
-            border-radius: 6px 6px 0 0;
-            font-weight: 600;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-          }
-          .table-container td {
-            background: linear-gradient(145deg, #2d3250, #1b1f3b);
-            padding: 20px;
-            border-radius: 4px;
-          }
-          .table-container tr {
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s ease, background 0.2s ease;
-          }
-          .table-container tr:hover {
-            background: linear-gradient(145deg, #1b1f3b, #2d3250);
-            transform: scale(1.005);
-          }
-          .table-container tr:nth-child(even) td {
-            background: linear-gradient(145deg, #2d3250, #25283d);
-          }
-          .tooltip:hover::after {
-            font-size: 0.75rem;
-            padding: 6px 10px;
-          }
-        }
-      `}</style>
-      {/* Renderizando o contêiner principal da página */}
+
       <div className="min-h-screen bg-[#FFFDF7] font-sans">
-        {/* Renderizando a seção de cabeçalho com título e navegação */}
+        {/* Cabeçalho */}
         <section className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7] py-12 sm:py-16 px-4">
           <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-4xl font-bold mb-6 animate-slide-up">
-              Meus Chamados
-            </h1>
-            <p
-              className="text-base sm:text-lg md:text-xl mb-8 max-w-3xl mx-auto animate-slide-up text-[#FFFDF7]/90"
-              style={{ animationDelay: "0.2s" }}
-            >
+            <h1 className="text-3xl sm:text-4xl font-bold mb-6">Meus Chamados</h1>
+            <p className="text-base sm:text-lg md:text-xl mb-8 max-w-3xl mx-auto text-[#FFFDF7]/90">
               Acompanhe o status dos seus chamados e visualize os relatórios dos técnicos
             </p>
             <Link
               href="/"
-              className="text-[#FFFDF7] underline hover:text-[#E31B23] transition duration-300 text-sm sm:text-base md:text-lg font-medium"
-              aria-label="Voltar para a página inicial"
+              className="text-[#FFFDF7] underline hover:text-[#E31B23] transition duration-300"
             >
               Voltar para a Página Inicial
             </Link>
           </div>
         </section>
 
-        {/* Renderizando a seção de lista de chamados */}
-        <section className="py-12 sm:py-16 px-4">
+        {/* Lista de chamados */}
+        <section className="py-12 px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="bg-[#2D3250] p-6 sm:p-8 rounded-xl shadow-lg border-t-4 border-[#E31B23] animate-slide-up">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#FFFDF7] mb-6">
+            <div className="bg-[#2D3250] p-6 rounded-xl shadow-lg border-t-4 border-[#E31B23]">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#FFFDF7] mb-6">
                 Chamados Registrados
               </h2>
-              {/* Renderizando o layout de cartões para telas pequenas e tablets */}
-              <div
-                className="lg:hidden grid gap-5 sm:grid-cols-1 md:grid-cols-2"
-                role="region"
-                aria-label="Lista de chamados"
-              >
-                {tickets.map((ticket, index) => {
-                  const { numeroPatrimonio, descricaoText } = parseDescricao(ticket.descricao);
-                  return (
-                    <div
-                      key={ticket.id}
-                      className="ticket-card p-4 sm:p-5 rounded-lg shadow-md animate-slide-up"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <div className="grid grid-cols-2 gap-3 text-[#FFFDF7] text-sm sm:text-base md:text-base leading-relaxed">
-                        <div className="font-medium">ID:</div>
-                        <div>{ticket.id}</div>
-                        <div className="font-medium">Título:</div>
-                        <div>{ticket.titulo}</div>
-                        <div className="font-medium">Nº Patrimônio:</div>
-                        <div className="truncate">{numeroPatrimonio}</div>
-                        <div className="font-medium">Descrição:</div>
-                        <div className="truncate">{descricaoText}</div>
-                        <div className="font-medium">Tipo:</div>
-                        <div>{tipoMap[ticket.tipo_id]}</div>
-                        <div className="font-medium">Status:</div>
-                        <div>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
-                              ticket.status === "pendente"
-                                ? "bg-yellow-500/20 text-yellow-400"
-                                : ticket.status === "em andamento"
-                                ? "bg-blue-500/20 text-blue-400"
-                                : "bg-green-500/20 text-green-400"
-                            }`}
-                          >
-                            {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
-                          </span>
-                        </div>
-                        <div className="font-medium">Técnico:</div>
-                        <div>{tecnicoMap[ticket.tecnico_id] || "Não atribuído"}</div>
-                        <div className="font-medium">Data:</div>
-                        <div>{new Date(ticket.criado_em).toLocaleDateString("pt-BR")}</div>
-                        <div className="font-medium">Ações:</div>
-                        <div>
-                          <button
-                            className="text-[#E31B23] hover:text-[#C5161D] font-medium text-sm sm:text-base tooltip"
-                            data-tooltip="Ver relatórios"
-                            onClick={() => {
-                              setSelectedTicket(ticket);
-                              setShowNotesModal(true);
-                            }}
-                            aria-label={`Ver relatórios do chamado ${ticket.id}`}
-                            aria-expanded={showNotesModal && selectedTicket?.id === ticket.id}
-                          >
-                            Relatórios
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Renderizando o layout de tabela para telas maiores */}
-              <div className="hidden lg:block table-container">
+
+              {/* Tabela */}
+              <div className="hidden lg:block table-container overflow-x-auto">
                 <table className="w-full text-[#FFFDF7]">
                   <thead>
                     <tr className="bg-[#1B1F3B]">
-                      <th className="p-4 text-left font-medium rounded-l-lg w-[8%]" aria-sort="none">ID</th>
-                      <th className="p-4 text-left font-medium w-[15%]" aria-sort="none">Título</th>
-                      <th className="p-4 text-left font-medium w-[12%]" aria-sort="none">Nº Patrimônio</th>
-                      <th className="p-4 text-left font-medium w-[20%]" aria-sort="none">Descrição</th>
-                      <th className="p-4 text-left font-medium w-[10%]" aria-sort="none">Tipo</th>
-                      <th className="p-4 text-left font-medium w-[10%]" aria-sort="none">Status</th>
-                      <th className="p-4 text-left font-medium w-[12%]" aria-sort="none">Técnico</th>
-                      <th className="p-4 text-left font-medium w-[10%]" aria-sort="none">Data</th>
-                      <th className="p-4 text-left font-medium rounded-r-lg w-[8%]" aria-sort="none">Ações</th>
+                      <th className="p-4 text-left">ID</th>
+                      <th className="p-4 text-left">Título</th>
+                      <th className="p-4 text-left">Nº Patrimônio</th>
+                      <th className="p-4 text-left">Descrição</th>
+                      <th className="p-4 text-left">Tipo</th>
+                      <th className="p-4 text-left">Status</th>
+                      <th className="p-4 text-left">Técnico</th>
+                      <th className="p-4 text-left">Data</th>
+                      <th className="p-4 text-left">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {tickets.map((ticket, index) => {
+                    {tickets.map((ticket) => {
                       const { numeroPatrimonio, descricaoText } = parseDescricao(ticket.descricao);
                       return (
-                        <tr
-                          key={ticket.id}
-                          className="animate-slide-up"
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
-                          <td className="p-4 rounded-l-lg">{ticket.id}</td>
+                        <tr key={ticket.id}>
+                          <td className="p-4">{ticket.id}</td>
                           <td className="p-4">{ticket.titulo}</td>
                           <td className="p-4">{numeroPatrimonio}</td>
                           <td className="p-4">{descricaoText}</td>
@@ -333,21 +116,20 @@ export default function MeusChamados() {
                                   : "bg-green-500/20 text-green-400"
                               }`}
                             >
-                              {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                              {ticket.status}
                             </span>
                           </td>
                           <td className="p-4">{tecnicoMap[ticket.tecnico_id] || "Não atribuído"}</td>
-                          <td className="p-4">{new Date(ticket.criado_em).toLocaleDateString("pt-BR")}</td>
-                          <td className="p-4 rounded-r-lg">
+                          <td className="p-4">
+                            {new Date(ticket.criado_em).toLocaleDateString("pt-BR")}
+                          </td>
+                          <td className="p-4">
                             <button
-                              className="text-[#E31B23] hover:text-[#C5161D] font-medium text-sm sm:text-base tooltip"
-                              data-tooltip="Ver relatórios"
+                              className="text-[#E31B23] hover:text-[#C5161D]"
                               onClick={() => {
                                 setSelectedTicket(ticket);
                                 setShowNotesModal(true);
                               }}
-                              aria-label={`Ver relatórios do chamado ${ticket.id}`}
-                              aria-expanded={showNotesModal && selectedTicket?.id === ticket.id}
                             >
                               Relatórios
                             </button>
@@ -362,16 +144,15 @@ export default function MeusChamados() {
           </div>
         </section>
 
-        {/* Renderizando o modal para visualização de relatórios */}
+        {/* Modal */}
         {showNotesModal && selectedTicket && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in px-4">
-            <div className="bg-[#2D3250] p-4 sm:p-6 md:p-8 rounded-xl shadow-lg max-w-lg w-full">
-              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-[#FFFDF7] mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+            <div className="bg-[#2D3250] p-6 rounded-xl shadow-lg max-w-lg w-full">
+              <h3 className="text-lg font-bold text-[#FFFDF7] mb-4">
                 Relatórios do Chamado {selectedTicket.id}
               </h3>
-              {/* Exibindo relatórios existentes do chamado */}
               <div className="mb-6 max-h-48 overflow-y-auto">
-                {selectedTicket.notes.length > 0 ? (
+                {selectedTicket.notes?.length > 0 ? (
                   <ul className="space-y-2">
                     {selectedTicket.notes.map((note, index) => (
                       <li key={index} className="text-[#FFFDF7]/90 text-sm border-b border-[#FFFDF7]/10 pb-2">
@@ -383,13 +164,11 @@ export default function MeusChamados() {
                   <p className="text-[#FFFDF7]/90 text-sm">Nenhum relatório registrado.</p>
                 )}
               </div>
-              {/* Botão para fechar o modal, sem formulário para adição de relatórios */}
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={() => setShowNotesModal(false)}
-                  className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 sm:px-5 py-2 rounded-lg font-bold hover:bg-[#FFFDF7]/30 transition duration-300 focus:ring-4 focus:ring-offset-2 focus:ring-[#FFFDF7] min-w-[120px]"
-                  aria-label="Fechar modal"
+                  className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg font-bold hover:bg-[#FFFDF7]/30"
                 >
                   Fechar
                 </button>
