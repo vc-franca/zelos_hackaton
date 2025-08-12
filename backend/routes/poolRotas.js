@@ -9,12 +9,14 @@ import {
   excluirPoolController
 } from '../controllers/PoolController.js';
 
+import authMiddleware from '../middlewares/authMiddleware.js';
+
 const router = express.Router();
 
 router.get('/', listarPoolController);
 router.get('/:id', obterPoolPorIdController);
-router.post('/', criarPoolController);
-router.put('/:id', atualizarPoolController);
-router.delete('/:id', excluirPoolController);
+router.post('/', authMiddleware, criarPoolController);
+router.put('/:id', authMiddleware, atualizarPoolController);
+router.delete('/:id', authMiddleware, excluirPoolController);
 
 export default router;

@@ -7,14 +7,12 @@ import {
     excluirUsuarioController
 } from '../controllers/UsuariosController.js';
 
-import authMIddleware from '../middlewares/authMiddleware.js';
-
 const router = express.Router();
 
-router.get('/', authMIddleware, listarUsuariosController);
-router.get('/:id', authMIddleware, obterUsuarioPorIdController);
-router.post('/', authMIddleware, criarUsuarioController);
-router.put('/:id', authMIddleware, atualizarUsuarioController);
-router.delete('/:id', authMIddleware, excluirUsuarioController);
+router.get('/', listarUsuariosController);
+router.get('/:id', obterUsuarioPorIdController);
+router.post('/', criarUsuarioController);
+router.put('/:id', atualizarUsuarioController);
+router.delete('/:id', excluirUsuarioController);
 
 export default router;

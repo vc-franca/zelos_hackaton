@@ -25,7 +25,16 @@ const loginController = async (req, res) => {
     // Gerar o token JWT
     const token = jwt.sign({ id: usuario.id, tipo: usuario.tipo }, JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({ mensagem: 'Login realizado com sucesso', token });
+    // 4. Salva no cookie (HTTP-only)
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3600000,
+    });
+
+    res.status(200).json({ mensagem: 'Login realizado com sucesso' });
+
   } catch (error) {
     console.error('Erro ao fazer login:', error);
     res.status(500).json({ mensagem: 'Erro ao fazer login' });
@@ -33,45 +42,40 @@ const loginController = async (req, res) => {
 };
 
 /* --------------------------------- LOGOUT --------------------------------- */
-const logoutController = async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: 'Nenhum usuário autenticado' });
-  }
-
-  console.log('Usuário deslogando:', req.user?.username);
-
-  req.logout((err) => {
-    if (err) {
-      console.error('Erro no logout:', err);
-      return res.status(500).json({ error: 'Erro ao realizar logout' });
-    }
-
-    // Destrói a sessão completamente
-    req.session.destroy((destroyErr) => {
-      if (destroyErr) {
-        console.error('Erro ao destruir sessão:', destroyErr);
-        return res.status(500).json({ error: 'Erro ao encerrar sessão' });
-      }
-
-      res.clearCookie('connect.sid'); // Remove o cookie de sessão
-      res.json({ message: 'Logout realizado com sucesso' });
-    });
+const logoutController = (req, res) => {
+  // Remove o cookie onde o token foi armazenado
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
   });
+
+  return res.json({ mensagem: 'Logout realizado com sucesso' });
 };
 
 /* ------------------------------- CHECK-AUTH ------------------------------- */
 // checa a autenticação
 const checkAuthController = (req, res) => {
-  if (req.isAuthenticated()) {
+  const token = req.cookies?.token; // pega o cookie chamado "token"
+
+  if (!token) {
+    return res.status(401).json({ authenticated: false });
+  }
+
+  try {
+    // verifica e decodifica o token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     return res.json({
       authenticated: true,
       user: {
-        username: req.user.username,
-        displayName: req.user.displayName
+        id: decoded.id,
+        tipo: decoded.tipo
       }
     });
+  } catch (err) {
+    return res.status(401).json({ authenticated: false, error: 'Token inválido ou expirado' });
   }
-  res.status(401).json({ authenticated: false });
 };
 
 export { loginController, logoutController, checkAuthController };

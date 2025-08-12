@@ -33,13 +33,18 @@ const obterChamadoPorIdController = async (req, res) => {
 /* ---------------------------------- CRIAR --------------------------------- */
 const criarChamadoController = async (req, res) => {
     try {
-        const { titulo, descricao, estado } = req.body;
+        const { titulo, descricao, tipo_id, tecnico_id, usuario_id, estado } = req.body;
 
-        const chamadoData = {
-            titulo: titulo,
-            descricao: descricao,
-            estado: estado,
+        // verifica se chamado e técnico existem
+        const [poolExiste] = await pool.query('SELECT id FROM pool WHERE id = ?', [tipo_id]);
+        const [tecnicoExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [tecnico_id, 'tecnico']);
+        const [usuarioExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND funcao = ?', [usuario_id, 'usuario']);
+
+        if (!poolExiste.length || !tecnicoExiste.length || usuarioExiste.length) {
+            return res.status(404).json({ mensagem: 'Tipo, técnico ou usuário não encontrados' });
         }
+
+        const chamadoData = { titulo, descricao, tipo_id, tecnico_id, usuario_id, estado }
 
         const chamadoId = await criarChamado(chamadoData);
         res.status(201).json({ mensagem: 'Chamado criado com sucesso: ', chamadoId })
@@ -54,20 +59,16 @@ const criarChamadoController = async (req, res) => {
 const atualizarChamadoController = async (req, res) => {
     try {
         const chamadoId = req.params.id
-        const { titulo, descricao, estado } = req.body;
+        const { titulo, descricao, tipo_id, tecnico_id, usuario_id, estado } = req.body;
 
-        const chamadoData = {
-            titulo: titulo,
-            descricao: descricao,
-            estado: estado,
-        }
+        const chamadoData = { titulo, descricao, tipo_id, tecnico_id, usuario_id, estado }
 
         await atualizarChamado(chamadoId, chamadoData);
         res.status(201).json({ mensagem: 'Chamado atualizado com sucesso' });
 
     } catch (err) {
         console.error('Erro ao atualizar chamado: ', err);
-        res.status(500).json({ 
+        res.status(500).json({
             mensagem: 'Erro ao atualizar chamado por ID: ',
             err: {
                 message: err.message,

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 
 /* ------------------------ // 0. Importação de rotas ----------------------- */
 import authRotas from './routes/authRotas.js'; // Rotas de Autenticação
@@ -20,6 +21,7 @@ dotenv.config();
 const app = express();
 const porta = process.env.PORT || 8080;
 
+
 /* ---------- // 3. Middlewares essenciais com tratamento de erros ---------- */
 try {
   app.use(cors({
@@ -27,6 +29,8 @@ try {
     credentials: true
   }));
   app.use(express.json());
+  
+  app.use(cookieParser());
 
   app.use(session({
     secret: 'sJYMmuCB2Z187XneUuaOVYTVUlxEOb2K94tFZy370HjOY7T7aiCKvwhNQpQBYL9e',
