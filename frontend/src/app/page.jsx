@@ -1,27 +1,26 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import Head from "next/head";
+import { useEffect } from "react";
 
-// Componente reutilizável para Cards de Serviços
 const ServiceCard = ({ title, description, items }) => (
-  <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border-t-4 border-[#1B1F3B] animate-slide-up">
+  <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border-t-4 border-[#1B1F3B] sr-slide-up">
     <h3 className="text-2xl font-bold mb-4 text-[#1B1F3B]">{title}</h3>
     <p className="text-gray-700 mb-4">{description}</p>
     <ul className="space-y-3">
       {items.map((item, index) => (
         <li key={index} className="flex items-start">
           <span className="text-[#E31B23] mr-2">•</span>
-          <span>{item}</span>
+          <span className="text-black">{item}</span>
         </li>
       ))}
     </ul>
   </div>
 );
 
-// Componente reutilizável para Destaques
 const HighlightCard = ({ number, title, description }) => (
-  <div className="text-center p-6 animate-slide-up">
+  <div className="text-center p-6 sr-slide-up">
     <div className="bg-[#E31B23] text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
       {number}
     </div>
@@ -30,9 +29,8 @@ const HighlightCard = ({ number, title, description }) => (
   </div>
 );
 
-// Componente reutilizável para Equipamentos
 const EquipmentCard = ({ title, icon }) => (
-  <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition duration-300 animate-slide-up">
+  <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition duration-300 sr-slide-up">
     <div className="bg-[#FFFDF7] w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
       {icon}
     </div>
@@ -40,13 +38,12 @@ const EquipmentCard = ({ title, icon }) => (
   </div>
 );
 
-// Componente reutilizável para Depoimentos
 const TestimonialCard = ({ initials, name, role, text }) => (
-  <div className="bg-white p-8 rounded-xl shadow-lg animate-slide-up">
+  <div className="bg-white p-8 rounded-xl shadow-lg inner-shadow">
     <div className="flex items-center mb-4">
       <div className="bg-[#E31B23] text-white w-12 h-12 rounded-full flex items-center justify-center font-bold mr-4">{initials}</div>
       <div>
-        <h4 className="font-bold text-lg">{name}</h4>
+        <h4 className="font-bold text-lg text-black ">{name}</h4>
         <p className="text-gray-600">{role}</p>
       </div>
     </div>
@@ -62,6 +59,21 @@ const TestimonialCard = ({ initials, name, role, text }) => (
 );
 
 export default function HomePage() {
+  useEffect(() => {
+    import("scrollreveal").then((ScrollReveal) => {
+      const sr = ScrollReveal.default({
+        distance: '20px',
+        duration: 500,
+        easing: 'ease-out',
+        origin: 'bottom',
+        reset: false,
+        viewFactor: 0.2,
+      });
+
+      sr.reveal('.sr-slide-up', { interval: 150 });
+    });
+  }, []);
+
   return (
     <>
       <Head>
@@ -69,34 +81,7 @@ export default function HomePage() {
         <meta name="description" content="Solução completa para gestão de manutenção de equipamentos escolares com agilidade e eficiência." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <style jsx global>{`
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-slide-up {
-          animation: slide-up 0.5s ease-out forwards;
-        }
-        @media (max-width: 768px) {
-          .testimonials-container {
-            display: flex;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            gap: 1rem;
-            padding-bottom: 1rem;
-          }
-          .testimonials-container > div {
-            flex: 0 0 90%;
-            scroll-snap-align: start;
-          }
-        }
-      `}</style>
+
       <div className="min-h-screen bg-[#FFFDF7] font-sans">
         {/* Floating Action Button */}
         <Link
@@ -114,21 +99,16 @@ export default function HomePage() {
           <div className="mx-auto text-center">
             <div className="relative w-full max-w-[1920px] h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden rounded-lg shadow-inner mx-auto">
               <video src="/backgroundhero.mp4" autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0" />
-              {/* Overlay para escurecer o vídeo */}
               <div className="absolute inset-0 bg-black bg-opacity-50 z-10" />
 
-              {/* Conteúdo centralizado */}
               <div className="relative z-20 flex flex-col justify-center items-center h-full px-4">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 animate-slide-up">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sr-slide-up">
                   Sistema de Manutenção Escolar
                 </h1>
-                <p
-                  className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 max-w-3xl animate-slide-up"
-                  style={{ animationDelay: "0.2s" }}
-                >
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 max-w-3xl sr-slide-up" style={{ animationDelay: "0.2s" }}>
                   Solução completa para gestão de manutenção de equipamentos escolares com agilidade e eficiência
                 </p>
-                <div className="flex flex-col sm:flex-row justify-center gap-4 px-4 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row justify-center gap-4 px-4 w-full sm:w-auto sr-slide-up">
                   <Link
                     href="/novo-chamado"
                     className="bg-[#E31B23] text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-bold hover:bg-[#C5161D] transition duration-300 text-base sm:text-lg shadow-lg focus:ring-2 focus:ring-offset-2 focus:ring-[#E31B23] text-center"
@@ -149,12 +129,11 @@ export default function HomePage() {
           </div>
         </section>
 
-
         {/* Serviços Section */}
         <section className="py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-[#1B1F3B] mb-4 animate-slide-up">Nossos Serviços</h2>
+              <h2 className="text-3xl font-bold text-[#1B1F3B] mb-4 sr-slide-up">Nossos Serviços</h2>
               <div className="w-20 h-1 bg-[#E31B23] mx-auto"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -181,7 +160,7 @@ export default function HomePage() {
         <section className="bg-[#1B1F3B] text-[#FFFDF7] py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold mb-4 animate-slide-up">Por Que Nosso Sistema?</h2>
+              <h2 className="text-3xl font-bold mb-4 sr-slide-up">Por Que Nosso Sistema?</h2>
               <div className="w-20 h-1 bg-[#E31B23] mx-auto"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -208,7 +187,7 @@ export default function HomePage() {
         <section className="py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-[#1B1F3B] mb-4 animate-slide-up">Equipamentos Atendidos</h2>
+              <h2 className="text-3xl font-bold text-[#1B1F3B] mb-4 sr-slide-up">Equipamentos Atendidos</h2>
               <div className="w-20 h-1 bg-[#E31B23] mx-auto"></div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -252,10 +231,10 @@ export default function HomePage() {
         <section className="bg-[#F5F5F5] py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-[#1B1F3B] mb-4 animate-slide-up">O Que Dizem Nossos Usuários</h2>
+              <h2 className="text-3xl font-bold text-[#1B1F3B] mb-4 sr-slide-up">O Que Dizem Nossos Usuários</h2>
               <div className="w-20 h-1 bg-[#E31B23] mx-auto"></div>
             </div>
-            <div className="testimonials-container grid grid-cols-1 md:grid-cols-2 gap-8 md:overflow-hidden">
+            <div className="testimonials-container grid grid-cols-1 md:grid-cols-2 gap-8 width-[1900]md:overflow-hidden">
               <TestimonialCard
                 initials="JP"
                 name="Joana Pereira"
@@ -281,8 +260,8 @@ export default function HomePage() {
         {/* CTA Final */}
         <section className="bg-gradient-to-r from-[#E31B23] to-[#C5161D] text-white py-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 animate-slide-up">Precisa de suporte técnico?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: "0.2s" }}>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 sr-slide-up">Precisa de suporte técnico?</h2>
+            <p className="text-xl mb-8 max-w-2xl mx-auto sr-slide-up" style={{ animationDelay: "0.2s" }}>
               Nossa equipe especializada está pronta para resolver seus problemas com equipamentos escolares
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
