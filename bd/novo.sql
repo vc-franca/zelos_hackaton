@@ -31,6 +31,7 @@ CREATE TABLE pool (
 CREATE TABLE chamados (
     id INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
+    patrimonio INT(7) NOT NULL,
     descricao TEXT NOT NULL,
     tipo_id INT,
     tecnico_id INT,
@@ -90,11 +91,11 @@ INSERT INTO pool (titulo, descricao, created_by, updated_by) VALUES
     ('externo',        'Demandas externas à unidade escolar.',                      1, 1);
 
 -- Chamados
-INSERT INTO chamados (titulo, descricao, tipo_id, tecnico_id, usuario_id, estado) VALUES
-    ('Trocar lâmpada',      'A lâmpada da sala 102 está queimada.',                     1, 2, 4, 'pendente'),
-    ('Erro no computador',  'O computador da secretaria não liga.',                     2, 3, 5, 'em andamento'),
-    ('Limpeza urgente',     'Sala 201 precisa de limpeza urgente após evento.',         3, NULL, 4, 'pendente'),
-    ('Impressora travada',  'Impressora da sala dos professores não imprime.',          2, 2, 5, 'concluído');
+INSERT INTO chamados (titulo, patrimonio, descricao, tipo_id, tecnico_id, usuario_id, estado) VALUES
+    ('Trocar lâmpada', 0000001,      'A lâmpada da sala 102 está queimada.',                     1, 2, 4, 'pendente'),
+    ('Erro no computador', 0000002,  'O computador da secretaria não liga.',                     2, 3, 5, 'em andamento'),
+    ('Limpeza urgente', 0000003,     'Sala 201 precisa de limpeza urgente após evento.',         3, NULL, 4, 'pendente'),
+    ('Impressora travada', 0000004,  'Impressora da sala dos professores não imprime.',          2, 2, 5, 'concluído');
 
 -- Apontamentos
 INSERT INTO apontamentos (chamado_id, tecnico_id, descricao, comeco, fim) VALUES
