@@ -27,9 +27,9 @@ const criarUser= async (userData) => {
   }
 };
 
-const atualizarUser = async (id, livroData) => {
+const atualizarUser = async (id, userData) => {
   try {
-    await update('usuarios', livroData, `id = ${id}`);
+    await update('usuarios', userData, `id = ${id}`);
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
     throw error;

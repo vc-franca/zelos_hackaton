@@ -1,4 +1,5 @@
 import { listarUsers, obterUserPorId, criarUser, atualizarUser, excluirUser } from '../models/Usuarios.js';
+import bcrypt from 'bcryptjs';
 
 // import do banco de dados para verificação nas funções de criar e atualizar
 import { create, readAll, read, update, deleteRecord, pool } from '../config/database.js';
@@ -54,9 +55,13 @@ const criarUsuarioController = async (req, res) => {
 const atualizarUsuarioController = async (req, res) => {
     try {
         const usuarioId = req.params.id;
-        const { titulo, descricao, status } = req.body;
+        const { nome, senha, email, funcao, estado } = req.body;
 
-        const usuarioData = { titulo, descricao, status };
+        // Gera hash automaticamente
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(senha, salt);
+        
+        const usuarioData = { nome, senha: hashedPassword, email, funcao, estado };
 
         await atualizarUser(usuarioId, usuarioData);
         res.status(201).json({ mensagem: 'Usuário atualizado com sucesso' });
