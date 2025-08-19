@@ -34,13 +34,16 @@ async function readAll(table, where = null) {
 }
 
 // Função para ler um registro específico
-async function read(table, where) {
+async function read(table, where, and) {
     const connection = await getConnection();
     try {
         let sql = `SELECT * FROM ${table}`;
-        if (where) {
+        
+        if (where && and) {
+            sql += ` WHERE ${where} AND ${and}`;
+          } else if (where) {
             sql += ` WHERE ${where}`;
-        }
+          }
 
         const [rows] = await connection.execute(sql);
         return rows[0] || null;

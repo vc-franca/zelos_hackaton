@@ -118,3 +118,4 @@ WHERE p.id = 1 AND u.funcao = 'tecnico';
 
 
 select * from chamados;
+select * from usuarios;
