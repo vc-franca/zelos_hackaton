@@ -4,15 +4,15 @@ import { useState, useEffect } from "react";
 
 const statusOptions = [
   { value: "pendente", label: "Pendente", color: "yellow" },
-  { value: "em_andamento", label: "Em Andamento", color: "blue" },
+  { value: "em andamento", label: "Em Andamento", color: "blue" }, // Corrigido para usar espaço
   { value: "concluido", label: "Concluído", color: "green" },
-  { value: "cancelado", label: "Cancelado", color: "red" }
 ];
 
 export default function PainelTecnico() {
   const [tickets, setTickets] = useState([]);
   const [tipos, setTipos] = useState([]);
   const [tecnicos, setTecnicos] = useState([]);
+  const [usuarios, setUsuarios] = useState([]); // Adicionado para buscar usuários
   const [showManageModal, setShowManageModal] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [apontamentos, setApontamentos] = useState([]);
@@ -21,6 +21,7 @@ export default function PainelTecnico() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
   
   // ID do técnico logado (em um sistema real, viria da autenticação)
   const tecnicoLogadoId = 3; // Temporário - substituir pela autenticação real
@@ -31,16 +32,18 @@ export default function PainelTecnico() {
       try {
         setIsLoading(true);
         
-        const [chamadosRes, tiposRes, tecnicosRes] = await Promise.all([
+        const [chamadosRes, tiposRes, tecnicosRes, usuariosRes] = await Promise.all([
           fetch("http://localhost:8080/chamados"),
           fetch("http://localhost:8080/pool"),
-          fetch("http://localhost:8080/usuarios")
+          fetch("http://localhost:8080/usuarios"),
+          fetch("http://localhost:8080/usuarios") // Buscar todos os usuários
         ]);
 
-        const [chamadosData, tiposData, tecnicosData] = await Promise.all([
+        const [chamadosData, tiposData, tecnicosData, usuariosData] = await Promise.all([
           chamadosRes.json(),
           tiposRes.json(),
-          tecnicosRes.json()
+          tecnicosRes.json(),
+          usuariosRes.json()
         ]);
 
         // Filtrar apenas chamados do técnico logado
@@ -51,6 +54,7 @@ export default function PainelTecnico() {
         setTickets(chamadosDoTecnico);
         setTipos(tiposData);
         setTecnicos(tecnicosData.filter(user => user.funcao === 'tecnico'));
+        setUsuarios(usuariosData);
         
       } catch (err) {
         console.error("Erro ao buscar dados:", err);
@@ -87,10 +91,20 @@ export default function PainelTecnico() {
     }
   }, [showManageModal, selectedTicket]);
 
+  // Limpar mensagens de sucesso após 3 segundos
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
   // Função para obter nome do tipo pelo ID
   const getTipoNome = (tipoId) => {
     const tipo = tipos.find(t => t.id === tipoId);
-    return tipo ? tipo.titulo.charAt(0).toUpperCase() + tipo.titulo.slice(1) : "Tipo não encontrado";
+    return tipo ? tipo.titulo.charAt(0).toUpperCase() + tipo.titulo.slice(1).replace('_', ' ') : "Tipo não encontrado";
   };
 
   // Função para obter nome do técnico pelo ID
@@ -99,21 +113,30 @@ export default function PainelTecnico() {
     return tecnico ? tecnico.nome : "Técnico não encontrado";
   };
 
-  // Atualizar status do chamado
-  const atualizarStatusChamado = async (chamadoId, novoStatus) => {
+  // Função para obter nome do usuário pelo ID
+  const getUsuarioNome = (usuarioId) => {
+    const usuario = usuarios.find(u => u.id === usuarioId);
+    return usuario ? usuario.nome : "Usuário não encontrado";
+  };
+
+  // Atualizar apenas o status do chamado (função simplificada)
+  const atualizarApenasStatus = async (chamadoId, novoStatus) => {
     try {
       const chamado = tickets.find(t => t.id === chamadoId);
-      if (!chamado) return;
+      if (!chamado) throw new Error("Chamado não encontrado");
 
+      // Criar payload com todos os dados obrigatórios
       const payload = {
         titulo: chamado.titulo,
-        patrimonio: chamado.patrimonio,
+        patrimonio: String(chamado.patrimonio).padStart(7, '0'), // Garantir 7 dígitos
         descricao: chamado.descricao,
         tipo_id: chamado.tipo_id,
         tecnico_id: chamado.tecnico_id,
         usuario_id: chamado.usuario_id,
         estado: novoStatus
       };
+
+      console.log('Enviando payload:', payload); // Debug
 
       const response = await fetch(`http://localhost:8080/chamados/${chamadoId}`, {
         method: "PUT",
@@ -124,7 +147,9 @@ export default function PainelTecnico() {
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao atualizar status");
+        const errorData = await response.json();
+        console.error('Erro do servidor:', errorData);
+        throw new Error(errorData.mensagem || "Erro ao atualizar status");
       }
 
       // Atualizar estado local
@@ -136,6 +161,11 @@ export default function PainelTecnico() {
         )
       );
 
+      // Atualizar ticket selecionado se for o mesmo
+      if (selectedTicket && selectedTicket.id === chamadoId) {
+        setSelectedTicket(prev => ({ ...prev, estado: novoStatus }));
+      }
+
       return true;
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
@@ -146,15 +176,18 @@ export default function PainelTecnico() {
   // Criar novo apontamento
   const criarApontamento = async (chamadoId, descricao) => {
     try {
-      const agora = new Date().toISOString();
+      const agora = new Date();
+      const inicioTrabalho = new Date(agora.getTime() - (30 * 60 * 1000)); // 30 minutos atrás como exemplo
       
       const payload = {
         chamado_id: chamadoId,
         tecnico_id: tecnicoLogadoId,
         descricao: descricao,
-        comeco: agora,
-        fim: agora // Em um sistema real, isso seria controlado separadamente
+        comeco: inicioTrabalho.toISOString().slice(0, 19).replace('T', ' '), // Formato MySQL
+        fim: agora.toISOString().slice(0, 19).replace('T', ' ') // Formato MySQL
       };
+
+      console.log('Criando apontamento:', payload); // Debug
 
       const response = await fetch("http://localhost:8080/apontamentos", {
         method: "POST",
@@ -165,7 +198,9 @@ export default function PainelTecnico() {
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao criar apontamento");
+        const errorData = await response.json();
+        console.error('Erro ao criar apontamento:', errorData);
+        throw new Error(errorData.mensagem || "Erro ao criar apontamento");
       }
 
       return true;
@@ -185,14 +220,19 @@ export default function PainelTecnico() {
       setIsSaving(true);
       setError(null);
       
+      let statusAtualizado = false;
+      let apontamentoCriado = false;
+
       // Atualizar status se foi alterado
       if (newStatus && newStatus !== selectedTicket.estado) {
-        await atualizarStatusChamado(selectedTicket.id, newStatus);
+        await atualizarApenasStatus(selectedTicket.id, newStatus);
+        statusAtualizado = true;
       }
       
       // Criar apontamento se foi adicionado
       if (newNote.trim()) {
         await criarApontamento(selectedTicket.id, newNote.trim());
+        apontamentoCriado = true;
         
         // Recarregar apontamentos
         const response = await fetch("http://localhost:8080/apontamentos");
@@ -208,14 +248,34 @@ export default function PainelTecnico() {
       setNewStatus("");
       setNewNote("");
       
-      // Mostrar sucesso (opcional)
-      alert("Alterações salvas com sucesso!");
+      // Mostrar mensagem de sucesso
+      let mensagem = "Alterações salvas com sucesso!";
+      if (statusAtualizado && apontamentoCriado) {
+        mensagem = "Status atualizado e apontamento registrado com sucesso!";
+      } else if (statusAtualizado) {
+        mensagem = "Status do chamado atualizado com sucesso!";
+      } else if (apontamentoCriado) {
+        mensagem = "Apontamento registrado com sucesso!";
+      }
+      
+      setSuccessMessage(mensagem);
       
     } catch (err) {
       console.error("Erro ao atualizar chamado:", err);
-      setError("Erro ao salvar alterações. Tente novamente.");
+      setError(`Erro ao salvar alterações: ${err.message}`);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Quick status update (botão rápido na listagem)
+  const quickStatusUpdate = async (ticketId, novoStatus) => {
+    try {
+      setError(null);
+      await atualizarApenasStatus(ticketId, novoStatus);
+      setSuccessMessage(`Status alterado para "${statusOptions.find(s => s.value === novoStatus)?.label}" com sucesso!`);
+    } catch (err) {
+      setError(`Erro ao atualizar status: ${err.message}`);
     }
   };
 
@@ -258,9 +318,16 @@ export default function PainelTecnico() {
       {/* Conteúdo Principal */}
       <main className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
+          {/* Mensagens de Feedback */}
           {error && (
-            <div className="bg-red-500/20 text-red-500 p-4 rounded-lg mb-6">
-              {error}
+            <div className="bg-red-500/20 text-red-500 p-4 rounded-lg mb-6 border border-red-500/30">
+              <strong>Erro:</strong> {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="bg-green-500/20 text-green-500 p-4 rounded-lg mb-6 border border-green-500/30">
+              <strong>Sucesso:</strong> {successMessage}
             </div>
           )}
 
@@ -305,12 +372,18 @@ export default function PainelTecnico() {
                           <p className="text-[#FFFDF7] text-sm">{ticket.descricao}</p>
                         </div>
                         <div>
+                          <p className="text-[#FFFDF7]/70">Solicitante:</p>
+                          <p className="text-[#FFFDF7]">{getUsuarioNome(ticket.usuario_id)}</p>
+                        </div>
+                        <div>
                           <p className="text-[#FFFDF7]/70">Data:</p>
                           <p className="text-[#FFFDF7]">
                             {ticket.criado_em ? new Date(ticket.criado_em).toLocaleDateString("pt-BR") : "N/A"}
                           </p>
                         </div>
                       </div>
+
+
                       
                       <button
                         onClick={() => {
@@ -320,7 +393,7 @@ export default function PainelTecnico() {
                         }}
                         className="w-full bg-[#E31B23] hover:bg-[#C5161D] text-white py-2 rounded-lg font-medium transition duration-300"
                       >
-                        Gerenciar Chamado
+                        Gerenciar Detalhado
                       </button>
                     </div>
                   ))}
@@ -335,6 +408,7 @@ export default function PainelTecnico() {
                         <th className="p-4 text-left">Título</th>
                         <th className="p-4 text-left">Patrimônio</th>
                         <th className="p-4 text-left">Tipo</th>
+                        <th className="p-4 text-left">Solicitante</th>
                         <th className="p-4 text-left">Status</th>
                         <th className="p-4 text-left">Data</th>
                         <th className="p-4 text-left">Ações</th>
@@ -347,6 +421,7 @@ export default function PainelTecnico() {
                           <td className="p-4">{ticket.titulo}</td>
                           <td className="p-4">{ticket.patrimonio || "N/A"}</td>
                           <td className="p-4">{getTipoNome(ticket.tipo_id)}</td>
+                          <td className="p-4">{getUsuarioNome(ticket.usuario_id)}</td>
                           <td className="p-4">
                             <StatusBadge status={ticket.estado} />
                           </td>
@@ -376,47 +451,68 @@ export default function PainelTecnico() {
         </div>
       </main>
 
-      {/* Modal de Gerenciamento */}
+      {/* Modal de Gerenciamento Detalhado */}
       {showManageModal && selectedTicket && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#2D3250] rounded-xl shadow-lg max-w-lg w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-[#2D3250] rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-xl font-bold text-[#FFFDF7] mb-4">
                 Gerenciar Chamado #{selectedTicket.id}
               </h3>
               
-              <div className="mb-4 p-4 bg-[#1B1F3B] rounded-lg">
+              <div className="mb-6 p-4 bg-[#1B1F3B] rounded-lg">
                 <h4 className="font-semibold text-[#FFFDF7] mb-2">Detalhes do Chamado</h4>
-                <p className="text-[#FFFDF7]/90 text-sm"><strong>Título:</strong> {selectedTicket.titulo}</p>
-                <p className="text-[#FFFDF7]/90 text-sm"><strong>Descrição:</strong> {selectedTicket.descricao}</p>
-                <p className="text-[#FFFDF7]/90 text-sm"><strong>Patrimônio:</strong> {selectedTicket.patrimonio}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <p className="text-[#FFFDF7]/90"><strong>Título:</strong> {selectedTicket.titulo}</p>
+                  <p className="text-[#FFFDF7]/90"><strong>Patrimônio:</strong> {selectedTicket.patrimonio}</p>
+                  <p className="text-[#FFFDF7]/90"><strong>Tipo:</strong> {getTipoNome(selectedTicket.tipo_id)}</p>
+                  <p className="text-[#FFFDF7]/90"><strong>Solicitante:</strong> {getUsuarioNome(selectedTicket.usuario_id)}</p>
+                  <p className="text-[#FFFDF7]/90 md:col-span-2"><strong>Descrição:</strong> {selectedTicket.descricao}</p>
+                  <p className="text-[#FFFDF7]/90"><strong>Data de Criação:</strong> {new Date(selectedTicket.criado_em).toLocaleString("pt-BR")}</p>
+                  <p className="text-[#FFFDF7]/90"><strong>Status Atual:</strong> 
+                    <span className="ml-2">
+                      <StatusBadge status={selectedTicket.estado} />
+                    </span>
+                  </p>
+                </div>
               </div>
 
               {/* Apontamentos Existentes */}
               <div className="mb-6">
-                <h4 className="text-lg font-semibold text-[#FFFDF7] mb-3">Apontamentos Registrados</h4>
+                <h4 className="text-lg font-semibold text-[#FFFDF7] mb-3">Histórico de Apontamentos</h4>
                 <div className="bg-[#1B1F3B] rounded-lg p-4 max-h-40 overflow-y-auto">
                   {apontamentos.length > 0 ? (
                     <ul className="space-y-3">
                       {apontamentos.map((apontamento, index) => (
                         <li key={apontamento.id || index} className="text-[#FFFDF7]/90 text-sm border-b border-[#FFFDF7]/10 pb-2 last:border-0">
-                          <p><strong>Técnico:</strong> {getTecnicoNome(apontamento.tecnico_id)}</p>
+                          <div className="flex justify-between items-start mb-1">
+                            <p><strong>Técnico:</strong> {getTecnicoNome(apontamento.tecnico_id)}</p>
+                            <p className="text-xs text-[#FFFDF7]/70">
+                              {new Date(apontamento.comeco).toLocaleString("pt-BR")}
+                            </p>
+                          </div>
                           <p><strong>Descrição:</strong> {apontamento.descricao}</p>
-                          <p><strong>Data:</strong> {new Date(apontamento.comeco).toLocaleString("pt-BR")}</p>
+                          {apontamento.duracao && (
+                            <p className="text-xs text-[#FFFDF7]/70">
+                              <strong>Duração:</strong> {Math.round(apontamento.duracao / 60)} min
+                            </p>
+                          )}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-[#FFFDF7]/70 text-sm">Nenhum apontamento registrado ainda.</p>
+                    <p className="text-[#FFFDF7]/70 text-sm text-center py-4">
+                      Nenhum apontamento registrado ainda.
+                    </p>
                   )}
                 </div>
               </div>
               
               {/* Formulário de Atualização */}
-              <div onSubmit={handleUpdateTicket}>
+              <form onSubmit={handleUpdateTicket}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-[#FFFDF7] mb-2">
-                    Status do Chamado
+                    Alterar Status do Chamado
                   </label>
                   <select
                     value={newStatus}
@@ -433,35 +529,48 @@ export default function PainelTecnico() {
                 
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-[#FFFDF7] mb-2">
-                    Novo Apontamento (opcional)
+                    Registrar Novo Apontamento
                   </label>
                   <textarea
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     className="w-full p-3 bg-[#1B1F3B] text-[#FFFDF7] border border-[#FFFDF7]/20 rounded-lg focus:border-[#E31B23] focus:outline-none"
                     rows={4}
-                    placeholder="Descreva as ações realizadas, problemas encontrados, soluções aplicadas..."
+                    placeholder="Descreva detalhadamente as ações realizadas, problemas encontrados, soluções aplicadas, materiais utilizados, tempo gasto, etc..."
                   />
+                  <p className="text-xs text-[#FFFDF7]/60 mt-1">
+                    Este apontamento será registrado com data/hora atual
+                  </p>
                 </div>
+                
+                {error && (
+                  <div className="mb-4 p-3 bg-red-500/20 text-red-400 text-sm rounded-lg border border-red-500/30">
+                    {error}
+                  </div>
+                )}
                 
                 <div className="flex justify-end gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowManageModal(false)}
-                    className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg font-medium hover:bg-[#FFFDF7]/30 transition duration-300"
+                    onClick={() => {
+                      setShowManageModal(false);
+                      setNewStatus("");
+                      setNewNote("");
+                      setError(null);
+                    }}
+                    className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-6 py-2 rounded-lg font-medium hover:bg-[#FFFDF7]/30 transition duration-300"
                   >
                     Cancelar
                   </button>
                   <button
-                    type="button"
-                    onClick={handleUpdateTicket}
-                    className="bg-[#E31B23] hover:bg-[#C5161D] text-white px-4 py-2 rounded-lg font-medium transition duration-300"
-                    disabled={isSaving}
+                    type="submit"
+                    className="bg-[#E31B23] hover:bg-[#C5161D] text-white px-6 py-2 rounded-lg font-medium transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSaving || (!newNote.trim() && newStatus === selectedTicket.estado)}
                   >
                     {isSaving ? "Salvando..." : "Salvar Alterações"}
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>

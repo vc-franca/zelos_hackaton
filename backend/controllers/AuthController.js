@@ -23,7 +23,7 @@ const loginController = async (req, res) => {
     }
 
     // Gerar o token JWT
-    const token = jwt.sign({ id: usuario.id, tipo: usuario.tipo }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: usuario.id, funcao: usuario.funcao }, JWT_SECRET, { expiresIn: '1h' });
 
     // 4. Salva no cookie (HTTP-only)
     res.cookie('token', token, {
@@ -33,11 +33,18 @@ const loginController = async (req, res) => {
       maxAge: 3600000,
     });
 
-    res.status(200).json({ mensagem: 'Login realizado com sucesso' });
+    res.status(200).json({
+      mensagem: 'Login realizado com sucesso',
+      user: {
+        id: usuario.id,
+        funcao: usuario.funcao,
+        email: usuario.email,
+      }
+    });
 
   } catch (error) {
     console.error('Erro ao fazer login:', error);
-    res.status(500).json({ mensagem: 'Erro ao fazer login' });
+    res.status(500).json({ mensagem: 'Erro ao fazer login', error });
   }
 };
 
@@ -70,7 +77,7 @@ const checkAuthController = (req, res) => {
       authenticated: true,
       user: {
         id: decoded.id,
-        tipo: decoded.tipo
+        funcao: decoded.funcao
       }
     });
   } catch (err) {
