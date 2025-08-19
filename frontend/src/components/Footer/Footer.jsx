@@ -19,10 +19,9 @@ export default function Footer() {
           <div>
             <h4 className="text-slate-700 font-semibold mb-4">Links rápidos</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="/home" className="hover:text-[#004aad]">Home</a></li>
-              <li><a href="/agenda" className="hover:text-[#004aad]">Agenda</a></li>
-              <li><a href="/sobrenos" className="hover:text-[#004aad]">Sobre nós</a></li>
-              <li><a href="/sobrenos#faq" className="hover:text-[#004aad]">FAQ</a></li>
+              <li><a href="/" className="hover:text-[#004aad]">Home</a></li>
+              <li><a href="/meus-chamados" className="hover:text-[#004aad]">meus chamados</a></li>
+              <li><a href="/novo-chamado" className="hover:text-[#004aad]">novo chamado</a></li>
             </ul>
           </div>
 
