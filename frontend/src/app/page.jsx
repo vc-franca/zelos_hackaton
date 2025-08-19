@@ -72,9 +72,6 @@ export default function LoginPage() {
         style={{ zIndex: 0 }}
       />
 
-      {/* Blur Overlay */}
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-[75%]" style={{ zIndex: 1 }} />
-
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
@@ -89,7 +86,7 @@ export default function LoginPage() {
                 <div className="space-y-4">
                   <h1 className="text-4xl lg:text-5xl font-bold text-transparent bg-clip-text"
                     style={{
-                      backgroundImage: 'linear-gradient(to bottom, #FF0000, #000000)'
+                      backgroundImage: 'linear-gradient(to bottom, #FF0000, #3c3c3c)'
                     }}>
                     Bem-vindo
                   </h1>
@@ -124,7 +121,7 @@ export default function LoginPage() {
                     <label
                       className="block text-sm font-medium text-white border-l-4 pl-3"
                       style={{
-                        borderImage: 'linear-gradient(to bottom, #FF0000, #000000) 1'
+                        borderImage: 'linear-gradient(to bottom, #FF0000, #3c3c3c) 1'
                       }}
                     >
                       Email Institucional
@@ -143,7 +140,7 @@ export default function LoginPage() {
                     <label
                       className="block text-sm font-medium text-white border-l-4 pl-3"
                       style={{
-                        borderImage: 'linear-gradient(to bottom, #FF0000, #000000) 1'
+                        borderImage: 'linear-gradient(to bottom, #FF0000, #3c3c3c) 1'
                       }}
                     >
                       Senha
@@ -162,7 +159,7 @@ export default function LoginPage() {
                     onClick={handleLogin}
                     className="w-full py-3 px-4 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg"
                     style={{
-                      background: 'linear-gradient(to bottom, #FF0000, #000000)',
+                      background: 'linear-gradient(to bottom, #FF0000, #3c3c3c)',
                     }}
                   >
                     Entrar
