@@ -141,7 +141,7 @@ export default function Navbar() {
           <ul className="px-6 py-4 space-y-4">
             <li
               className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
-              onClick={() => handleNavigation('/')}
+              onClick={() => handleNavigation('/home')}
             >
               Início
             </li>

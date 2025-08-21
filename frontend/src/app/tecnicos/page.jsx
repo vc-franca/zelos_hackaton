@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 const statusOptions = [
   { value: "pendente", label: "Pendente", color: "yellow" },
-  { value: "em andamento", label: "Em Andamento", color: "blue" }, // Corrigido para usar espaço
+  { value: "em andamento", label: "Em Andamento", color: "blue" },
   { value: "concluido", label: "Concluído", color: "green" },
 ];
 
@@ -12,7 +12,7 @@ export default function PainelTecnico() {
   const [tickets, setTickets] = useState([]);
   const [tipos, setTipos] = useState([]);
   const [tecnicos, setTecnicos] = useState([]);
-  const [usuarios, setUsuarios] = useState([]); // Adicionado para buscar usuários
+  const [usuarios, setUsuarios] = useState([]);
   const [showManageModal, setShowManageModal] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [apontamentos, setApontamentos] = useState([]);
@@ -22,12 +22,39 @@ export default function PainelTecnico() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-  
-  // ID do técnico logado (em um sistema real, viria da autenticação)
-  const tecnicoLogadoId = 3; // Temporário - substituir pela autenticação real
+  const [tecnicoLogadoId, setTecnicoLogadoId] = useState(null);
 
-  // Buscar dados iniciais
+  // Verificar autenticação e obter ID do técnico logado
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/auth/check-auth", {
+          credentials: "include", // Incluir cookies
+        });
+        const data = await response.json();
+        if (data.authenticated) {
+          if (data.user.funcao !== "tecnico") {
+            // Redirecionar se não for técnico
+            window.location.href = data.user.funcao === "administrador" ? "/admin" : "/home";
+            return;
+          }
+          setTecnicoLogadoId(data.user.id);
+        } else {
+          window.location.href = "/"; // Redirecionar para login se não autenticado
+        }
+      } catch (err) {
+        console.error("Erro ao verificar autenticação:", err);
+        setError("Erro ao verificar autenticação. Tente novamente.");
+        window.location.href = "/";
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Buscar dados iniciais apenas após obter o ID do técnico
+  useEffect(() => {
+    if (!tecnicoLogadoId) return;
+
     const fetchData = async () => {
       try {
         setIsLoading(true);
@@ -36,8 +63,12 @@ export default function PainelTecnico() {
           fetch("http://localhost:8080/chamados"),
           fetch("http://localhost:8080/pool"),
           fetch("http://localhost:8080/usuarios"),
-          fetch("http://localhost:8080/usuarios") // Buscar todos os usuários
+          fetch("http://localhost:8080/usuarios")
         ]);
+
+        if (!chamadosRes.ok || !tiposRes.ok || !tecnicosRes.ok || !usuariosRes.ok) {
+          throw new Error("Erro ao buscar dados do servidor.");
+        }
 
         const [chamadosData, tiposData, tecnicosData, usuariosData] = await Promise.all([
           chamadosRes.json(),
@@ -58,14 +89,18 @@ export default function PainelTecnico() {
         
       } catch (err) {
         console.error("Erro ao buscar dados:", err);
-        setError("Erro ao carregar dados. Tente novamente mais tarde.");
+        if (err.message.includes("Failed to fetch")) {
+          setError("Não foi possível conectar ao servidor. Verifique sua conexão ou tente novamente mais tarde.");
+        } else {
+          setError(`Erro ao carregar dados: ${err.message}`);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [tecnicoLogadoId]);
 
   // Buscar apontamentos quando modal abrir
   useEffect(() => {
@@ -119,24 +154,21 @@ export default function PainelTecnico() {
     return usuario ? usuario.nome : "Usuário não encontrado";
   };
 
-  // Atualizar apenas o status do chamado (função simplificada)
+  // Atualizar apenas o status do chamado
   const atualizarApenasStatus = async (chamadoId, novoStatus) => {
     try {
       const chamado = tickets.find(t => t.id === chamadoId);
       if (!chamado) throw new Error("Chamado não encontrado");
 
-      // Criar payload com todos os dados obrigatórios
       const payload = {
         titulo: chamado.titulo,
-        patrimonio: String(chamado.patrimonio).padStart(7, '0'), // Garantir 7 dígitos
+        patrimonio: String(chamado.patrimonio).padStart(7, '0'),
         descricao: chamado.descricao,
         tipo_id: chamado.tipo_id,
         tecnico_id: chamado.tecnico_id,
         usuario_id: chamado.usuario_id,
         estado: novoStatus
       };
-
-      console.log('Enviando payload:', payload); // Debug
 
       const response = await fetch(`http://localhost:8080/chamados/${chamadoId}`, {
         method: "PUT",
@@ -148,7 +180,6 @@ export default function PainelTecnico() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Erro do servidor:', errorData);
         throw new Error(errorData.mensagem || "Erro ao atualizar status");
       }
 
@@ -161,7 +192,6 @@ export default function PainelTecnico() {
         )
       );
 
-      // Atualizar ticket selecionado se for o mesmo
       if (selectedTicket && selectedTicket.id === chamadoId) {
         setSelectedTicket(prev => ({ ...prev, estado: novoStatus }));
       }
@@ -177,17 +207,15 @@ export default function PainelTecnico() {
   const criarApontamento = async (chamadoId, descricao) => {
     try {
       const agora = new Date();
-      const inicioTrabalho = new Date(agora.getTime() - (30 * 60 * 1000)); // 30 minutos atrás como exemplo
+      const inicioTrabalho = new Date(agora.getTime() - (30 * 60 * 1000)); // Exemplo: 30 min atrás
       
       const payload = {
         chamado_id: chamadoId,
         tecnico_id: tecnicoLogadoId,
         descricao: descricao,
-        comeco: inicioTrabalho.toISOString().slice(0, 19).replace('T', ' '), // Formato MySQL
-        fim: agora.toISOString().slice(0, 19).replace('T', ' ') // Formato MySQL
+        comeco: inicioTrabalho.toISOString().slice(0, 19).replace('T', ' '),
+        fim: agora.toISOString().slice(0, 19).replace('T', ' ')
       };
-
-      console.log('Criando apontamento:', payload); // Debug
 
       const response = await fetch("http://localhost:8080/apontamentos", {
         method: "POST",
@@ -199,7 +227,6 @@ export default function PainelTecnico() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Erro ao criar apontamento:', errorData);
         throw new Error(errorData.mensagem || "Erro ao criar apontamento");
       }
 
@@ -223,13 +250,11 @@ export default function PainelTecnico() {
       let statusAtualizado = false;
       let apontamentoCriado = false;
 
-      // Atualizar status se foi alterado
       if (newStatus && newStatus !== selectedTicket.estado) {
         await atualizarApenasStatus(selectedTicket.id, newStatus);
         statusAtualizado = true;
       }
       
-      // Criar apontamento se foi adicionado
       if (newNote.trim()) {
         await criarApontamento(selectedTicket.id, newNote.trim());
         apontamentoCriado = true;
@@ -243,12 +268,10 @@ export default function PainelTecnico() {
         setApontamentos(apontamentosDoTicket);
       }
       
-      // Fechar modal e limpar campos
       setShowManageModal(false);
       setNewStatus("");
       setNewNote("");
       
-      // Mostrar mensagem de sucesso
       let mensagem = "Alterações salvas com sucesso!";
       if (statusAtualizado && apontamentoCriado) {
         mensagem = "Status atualizado e apontamento registrado com sucesso!";
@@ -261,7 +284,6 @@ export default function PainelTecnico() {
       setSuccessMessage(mensagem);
       
     } catch (err) {
-      console.error("Erro ao atualizar chamado:", err);
       setError(`Erro ao salvar alterações: ${err.message}`);
     } finally {
       setIsSaving(false);
@@ -279,6 +301,20 @@ export default function PainelTecnico() {
     }
   };
 
+  // Função de logout
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:8080/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Erro ao fazer logout:", err);
+      setError("Erro ao fazer logout. Tente novamente.");
+    }
+  };
+
   // Status badge com cor correspondente
   const StatusBadge = ({ status }) => {
     const statusInfo = statusOptions.find(opt => opt.value === status) || 
@@ -289,7 +325,6 @@ export default function PainelTecnico() {
         statusInfo.color === "yellow" ? "bg-yellow-500/20 text-yellow-400" :
         statusInfo.color === "blue" ? "bg-blue-500/20 text-blue-400" :
         statusInfo.color === "green" ? "bg-green-500/20 text-green-400" :
-        statusInfo.color === "red" ? "bg-red-500/20 text-red-400" :
         "bg-gray-500/20 text-gray-400"
       }`}>
         {statusInfo.label}
@@ -301,17 +336,25 @@ export default function PainelTecnico() {
     <div className="min-h-screen bg-[#FFFDF7] font-sans">
       {/* Cabeçalho */}
       <header className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7] py-12 px-4">
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="max-w-7xl mx-auto text-center flex flex-col items-center">
           <h1 className="text-3xl sm:text-4xl font-bold mb-6">Painel do Técnico</h1>
           <p className="text-lg sm:text-xl mb-8 max-w-3xl mx-auto text-[#FFFDF7]/90">
             Gerencie seus chamados, atualize status e registre apontamentos
           </p>
-          <button
-            onClick={() => window.history.back()}
-            className="text-[#FFFDF7] underline hover:text-[#E31B23] transition duration-300"
-          >
-            Voltar para a Página Inicial
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => window.history.back()}
+              className="text-[#FFFDF7] underline hover:text-[#E31B23] transition duration-300"
+            >
+              Voltar para a Página Inicial
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-[#E31B23] hover:bg-[#C5161D] text-[#FFFDF7] px-4 py-2 rounded-lg font-medium transition duration-300"
+            >
+              Sair
+            </button>
+          </div>
         </div>
       </header>
 
@@ -383,7 +426,18 @@ export default function PainelTecnico() {
                         </div>
                       </div>
 
-
+                      {/* Atualização rápida de status no mobile */}
+                      <select
+                        onChange={(e) => quickStatusUpdate(ticket.id, e.target.value)}
+                        value={ticket.estado}
+                        className="w-full mb-2 p-2 bg-[#1B1F3B] text-[#FFFDF7] border border-[#FFFDF7]/20 rounded-lg focus:border-[#E31B23] focus:outline-none"
+                      >
+                        {statusOptions.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                       
                       <button
                         onClick={() => {
@@ -411,6 +465,7 @@ export default function PainelTecnico() {
                         <th className="p-4 text-left">Solicitante</th>
                         <th className="p-4 text-left">Status</th>
                         <th className="p-4 text-left">Data</th>
+                        <th className="p-4 text-left">Atualizar Status</th>
                         <th className="p-4 text-left">Ações</th>
                       </tr>
                     </thead>
@@ -427,6 +482,19 @@ export default function PainelTecnico() {
                           </td>
                           <td className="p-4">
                             {ticket.criado_em ? new Date(ticket.criado_em).toLocaleDateString("pt-BR") : "N/A"}
+                          </td>
+                          <td className="p-4">
+                            <select
+                              onChange={(e) => quickStatusUpdate(ticket.id, e.target.value)}
+                              value={ticket.estado}
+                              className="bg-[#1B1F3B] text-[#FFFDF7] border border-[#FFFDF7]/20 rounded-lg p-1 focus:border-[#E31B23] focus:outline-none"
+                            >
+                              {statusOptions.map(option => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
                           </td>
                           <td className="p-4">
                             <button

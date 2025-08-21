@@ -11,11 +11,41 @@ export default function MeusChamados() {
   const [apontamentos, setApontamentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingApontamentos, setLoadingApontamentos] = useState(false);
+  const [error, setError] = useState(null);
+  const [usuarioLogadoId, setUsuarioLogadoId] = useState(null);
 
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/auth/check-auth", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.authenticated) {
+          if (data.user.funcao !== "usuario") {
+            window.location.href = data.user.funcao === "administrador" ? "/admin" : "/tecnicos";
+            return;
+          }
+          setUsuarioLogadoId(data.user.id);
+        } else {
+          window.location.href = "/";
+        }
+      } catch (err) {
+        console.error("Erro ao verificar autenticação:", err);
+        setError("Erro ao verificar autenticação. Tente novamente.");
+        window.location.href = "/";
+      }
+    };
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!usuarioLogadoId) return;
+
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
 
         const [chamadosRes, tiposRes, tecnicosRes] = await Promise.all([
           fetch("http://localhost:8080/chamados"),
@@ -23,24 +53,37 @@ export default function MeusChamados() {
           fetch("http://localhost:8080/usuarios")
         ]);
 
+        if (!chamadosRes.ok || !tiposRes.ok || !tecnicosRes.ok) {
+          throw new Error("Erro ao buscar dados do servidor.");
+        }
+
         const [chamadosData, tiposData, tecnicosData] = await Promise.all([
           chamadosRes.json(),
           tiposRes.json(),
           tecnicosRes.json()
         ]);
 
-        setTickets(chamadosData);
+        const chamadosDoUsuario = chamadosData.filter(
+          chamado => chamado.usuario_id === usuarioLogadoId
+        );
+
+        setTickets(chamadosDoUsuario);
         setTipos(tiposData);
         setTecnicos(tecnicosData.filter(user => user.funcao === 'tecnico'));
       } catch (err) {
         console.error("Erro ao buscar dados:", err);
+        if (err.message.includes("Failed to fetch")) {
+          setError("Não foi possível conectar ao servidor. Verifique sua conexão ou tente novamente mais tarde.");
+        } else {
+          setError(`Erro ao carregar dados: ${err.message}`);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [usuarioLogadoId]);
 
   useEffect(() => {
     if (showNotesModal && selectedTicket) {
@@ -77,13 +120,10 @@ export default function MeusChamados() {
     return tecnico ? tecnico.nome : "Técnico não encontrado";
   };
 
-  // === Ajuste de Status ===
   const getStatusBadge = (estado) => {
     if (!estado) return null;
 
     const statusKey = estado.toLowerCase().replace(/\s+/g, "_");
-    // transforma "em andamento" → "em_andamento"
-
     const statusConfig = {
       pendente: { label: "Pendente", classes: "bg-yellow-500/20 text-yellow-400" },
       em_andamento: { label: "Em Andamento", classes: "bg-blue-600/20 text-blue-500" },
@@ -93,14 +133,26 @@ export default function MeusChamados() {
 
     const config = statusConfig[statusKey] || { label: estado, classes: "bg-gray-500/20 text-gray-400" };
 
- return (
-  <span
-    className={`px-2 py-1 rounded-full text-xs md:text-sm font-medium whitespace-nowrap ${config.classes}`}
-  >
-    {config.label}
-  </span>
-  
-);
+    return (
+      <span
+        className={`px-2 py-1 rounded-full text-xs md:text-sm font-medium whitespace-nowrap ${config.classes}`}
+      >
+        {config.label}
+      </span>
+    );
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:8080/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Erro ao fazer logout:", err);
+      setError("Erro ao fazer logout. Tente novamente.");
+    }
   };
 
   if (loading) {
@@ -113,25 +165,37 @@ export default function MeusChamados() {
 
   return (
     <div className="min-h-screen bg-[#FFFDF7] font-sans">
-      {/* Cabeçalho */}
       <header className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7] py-8 sm:py-12 px-4">
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="max-w-7xl mx-auto text-center flex flex-col items-center">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
             Meus Chamados
           </h1>
           <p className="text-sm sm:text-base md:text-lg mb-6 sm:mb-8 max-w-3xl mx-auto text-[#FFFDF7]/90">
             Acompanhe o status dos seus chamados e visualize os relatórios dos técnicos
           </p>
-          <button
-            onClick={() => window.history.back()}
-            className="inline-block text-[#FFFDF7] underline hover:text-[#E31B23] transition duration-300 text-sm sm:text-base"
-          >
-            Voltar para a Página Inicial
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => window.history.back()}
+              className="text-[#FFFDF7] underline hover:text-[#E31B23] transition duration-300 text-sm sm:text-base"
+            >
+              Voltar para a Página Inicial
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-[#E31B23] hover:bg-[#C5161D] text-[#FFFDF7] px-4 py-2 rounded-lg font-medium transition duration-300"
+            >
+              Sair
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Lista de chamados */}
+      {error && (
+        <div className="bg-red-500/20 text-red-500 p-4 rounded-lg mb-6 border border-red-500/30 max-w-7xl mx-auto">
+          <strong>Erro:</strong> {error}
+        </div>
+      )}
+
       <main className="py-8 sm:py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="bg-[#2D3250] p-4 sm:p-6 rounded-xl shadow-lg border-t-4 border-[#E31B23]">
@@ -151,7 +215,6 @@ export default function MeusChamados() {
               </div>
             ) : (
               <>
-                {/* Tabela Desktop */}
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-[#FFFDF7]">
                     <thead>
@@ -202,7 +265,6 @@ export default function MeusChamados() {
                   </table>
                 </div>
 
-                {/* Versão Mobile */}
                 <div className="lg:hidden space-y-4">
                   {tickets.map((ticket) => {
                     const numeroPatrimonio = ticket.patrimonio
@@ -265,7 +327,6 @@ export default function MeusChamados() {
         </div>
       </main>
 
-      {/* Modal de apontamentos */}
       {showNotesModal && selectedTicket && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
           <div className="bg-[#2D3250] p-4 sm:p-6 rounded-xl shadow-lg max-w-md w-full mx-4 max-h-[80vh] overflow-hidden">

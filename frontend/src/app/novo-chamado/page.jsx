@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -6,9 +7,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function NovoChamado() {
-  // -------------------------------
-  // Estado do formulário
-  // -------------------------------
   const [formData, setFormData] = useState({
     titulo: "",
     numeroPatrimonio: "",
@@ -16,23 +14,47 @@ export default function NovoChamado() {
     tipo_id: "",
   });
 
-  // -------------------------------
-  // Estados auxiliares
-  // -------------------------------
-  const [tipos, setTipos] = useState([]); // Lista de tipos de serviço
-  const [errors, setErrors] = useState({}); // Mensagens de erro do formulário
-  const [isSubmitting, setIsSubmitting] = useState(false); // Indica envio
-  const [showSuccess, setShowSuccess] = useState(false); // Sucesso no envio
-  const [submitError, setSubmitError] = useState(null); // Erro geral no envio
+  const [tipos, setTipos] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [usuarioLogadoId, setUsuarioLogadoId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // -------------------------------
-  // Buscar tipos de serviço ao carregar a página
-  // -------------------------------
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/auth/check-auth", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.authenticated) {
+          if (data.user.funcao !== "usuario") {
+            window.location.href = data.user.funcao === "administrador" ? "/admin" : "/tecnicos";
+            return;
+          }
+          setUsuarioLogadoId(data.user.id);
+        } else {
+          window.location.href = "/";
+        }
+      } catch (err) {
+        console.error("Erro ao verificar autenticação:", err);
+        setSubmitError("Erro ao verificar autenticação. Tente novamente.");
+        window.location.href = "/";
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!usuarioLogadoId) return;
+
     const fetchTipos = async () => {
       try {
         const response = await axios.get("http://localhost:8080/pool");
-        console.log("Tipos carregados:", response.data);
         setTipos(response.data);
       } catch (error) {
         console.error("Erro ao carregar tipos:", error);
@@ -41,82 +63,50 @@ export default function NovoChamado() {
       }
     };
     fetchTipos();
-  }, []);
+  }, [usuarioLogadoId]);
 
-  // -------------------------------
-  // Atualiza o campo do formulário
-  // -------------------------------
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
-    // Validação especial para número de patrimônio
     if (name === "numeroPatrimonio") {
-      // Permite apenas números e limita a 7 dígitos
       const numbersOnly = value.replace(/\D/g, "").slice(0, 7);
       setFormData((prev) => ({ ...prev, [name]: numbersOnly }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
-    
-    setErrors((prev) => ({ ...prev, [name]: "" })); // Limpa erro do campo
-    setSubmitError(null); // Limpa erro geral
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+    setSubmitError(null);
   };
 
-  // -------------------------------
-  // Função para buscar técnico aleatório por tipo
-  // -------------------------------
   const buscarTecnicoAleatorio = async (tipoId) => {
     try {
       const response = await axios.get(
         `http://localhost:8080/poolTecnico/tecnicos/${tipoId}`
       );
-      
       const tecnicos = response.data;
       if (tecnicos.length === 0) {
         throw new Error("Nenhum técnico disponível para este tipo de serviço");
       }
-      
-      // Seleciona um técnico aleatório
-      const tecnicoAleatorio = tecnicos[Math.floor(Math.random() * tecnicos.length)];
-      return tecnicoAleatorio.id;
-      
+      return tecnicos[Math.floor(Math.random() * tecnicos.length)].id;
     } catch (error) {
       console.error("Erro ao buscar técnico:", error);
       throw error;
     }
   };
 
-  // -------------------------------
-  // Validação do formulário
-  // -------------------------------
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.titulo.trim()) {
-      newErrors.titulo = "O título é obrigatório.";
-    }
-    
+    if (!formData.titulo.trim()) newErrors.titulo = "O título é obrigatório.";
     if (!formData.numeroPatrimonio || formData.numeroPatrimonio.length === 0) {
       newErrors.numeroPatrimonio = "O número de patrimônio é obrigatório.";
     } else if (formData.numeroPatrimonio.length > 7) {
       newErrors.numeroPatrimonio = "O número de patrimônio deve ter no máximo 7 dígitos.";
     }
-    
-    if (!formData.descricao.trim()) {
-      newErrors.descricao = "A descrição é obrigatória.";
-    }
-    
-    if (!formData.tipo_id) {
-      newErrors.tipo_id = "Selecione um tipo de serviço.";
-    }
-    
+    if (!formData.descricao.trim()) newErrors.descricao = "A descrição é obrigatória.";
+    if (!formData.tipo_id) newErrors.tipo_id = "Selecione um tipo de serviço.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // -------------------------------
-  // Envio do formulário
-  // -------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -125,10 +115,7 @@ export default function NovoChamado() {
     setSubmitError(null);
 
     try {
-      // Busca um técnico aleatório para o tipo selecionado
       const tecnicoId = await buscarTecnicoAleatorio(formData.tipo_id);
-
-      // Adiciona zeros à esquerda para patrimônio
       const patrimonioComZeros = formData.numeroPatrimonio.padStart(7, "0");
 
       const payload = {
@@ -137,15 +124,11 @@ export default function NovoChamado() {
         descricao: formData.descricao.trim(),
         tipo_id: parseInt(formData.tipo_id, 10),
         tecnico_id: tecnicoId,
-        usuario_id: 4, // fixo por enquanto - pode ser dinâmico no futuro
+        usuario_id: usuarioLogadoId,
         estado: "pendente"
       };
 
-      console.log("Enviando payload:", payload);
-
       const response = await axios.post("http://localhost:8080/chamados", payload);
-      console.log("Chamado criado com sucesso:", response.data);
-      
       setShowSuccess(true);
       setFormData({
         titulo: "",
@@ -154,19 +137,13 @@ export default function NovoChamado() {
         tipo_id: "",
       });
     } catch (error) {
-      console.error("Erro ao enviar chamado:", error);
-      
       if (error.message === "Nenhum técnico disponível para este tipo de serviço") {
         setSubmitError("Nenhum técnico disponível para este tipo de serviço. Tente outro tipo ou entre em contato com o administrador.");
       } else if (error.response) {
-        // Erro do servidor
-        const errorMessage = error.response.data.mensagem || "Erro no servidor.";
-        setSubmitError(`Erro: ${errorMessage}`);
+        setSubmitError(`Erro: ${error.response.data.mensagem || "Erro no servidor."}`);
       } else if (error.request) {
-        // Erro de rede
         setSubmitError("Erro de conexão. Verifique sua internet e tente novamente.");
       } else {
-        // Outro erro
         setSubmitError("Erro inesperado. Tente novamente mais tarde.");
       }
     } finally {
@@ -174,9 +151,6 @@ export default function NovoChamado() {
     }
   };
 
-  // -------------------------------
-  // Fecha mensagem de sucesso automaticamente
-  // -------------------------------
   useEffect(() => {
     if (showSuccess) {
       const timer = setTimeout(() => setShowSuccess(false), 5000);
@@ -184,9 +158,27 @@ export default function NovoChamado() {
     }
   }, [showSuccess]);
 
-  // -------------------------------
-  // Renderização do formulário
-  // -------------------------------
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:8080/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Erro ao fazer logout:", err);
+      setSubmitError("Erro ao fazer logout. Tente novamente.");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#FFFDF7] font-sans flex items-center justify-center">
+        <div className="text-[#1B1F3B] text-xl">Carregando...</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Head>
@@ -198,13 +190,32 @@ export default function NovoChamado() {
       </Head>
 
       <div className="min-h-screen bg-[#FFFDF7] font-sans px-4 py-10">
-        <h1 className="text-4xl font-bold text-center mb-8 text-[#1B1F3B]">Abrir Novo Chamado</h1>
+        <header className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7] py-8 sm:py-12 px-4 mb-8">
+          <div className="max-w-7xl mx-auto text-center flex flex-col items-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+              Abrir Novo Chamado
+            </h1>
+            <div className="flex gap-4">
+              <button
+                onClick={() => window.history.back()}
+                className="text-[#FFFDF7] underline hover:text-[#E31B23] transition duration-300 text-sm sm:text-base"
+              >
+                Voltar para a Página Inicial
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-[#E31B23] hover:bg-[#C5161D] text-[#FFFDF7] px-4 py-2 rounded-lg font-medium transition duration-300"
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+        </header>
 
         <form
           onSubmit={handleSubmit}
           className="max-w-3xl mx-auto bg-[#2D3250] p-8 rounded-xl shadow-lg space-y-6 border-t-4 border-[#E31B23]"
         >
-          {/* Título */}
           <div>
             <label className="block text-[#FFFDF7] mb-2 font-medium">
               Título <span className="text-[#E31B23]">*</span>
@@ -221,7 +232,6 @@ export default function NovoChamado() {
             {errors.titulo && <p className="text-red-400 mt-1 text-sm">{errors.titulo}</p>}
           </div>
 
-          {/* Patrimônio */}
           <div>
             <label className="block text-[#FFFDF7] mb-2 font-medium">
               Nº Patrimônio <span className="text-[#E31B23]">*</span>
@@ -242,7 +252,6 @@ export default function NovoChamado() {
             {errors.numeroPatrimonio && <p className="text-red-400 mt-1 text-sm">{errors.numeroPatrimonio}</p>}
           </div>
 
-          {/* Descrição */}
           <div>
             <label className="block text-[#FFFDF7] mb-2 font-medium">
               Descrição <span className="text-[#E31B23]">*</span>
@@ -259,7 +268,6 @@ export default function NovoChamado() {
             {errors.descricao && <p className="text-red-400 mt-1 text-sm">{errors.descricao}</p>}
           </div>
 
-          {/* Tipo de Serviço */}
           <div>
             <label className="block text-[#FFFDF7] mb-2 font-medium">
               Tipo de Serviço <span className="text-[#E31B23]">*</span>
@@ -284,14 +292,12 @@ export default function NovoChamado() {
             {errors.tipo_id && <p className="text-red-400 mt-1 text-sm">{errors.tipo_id}</p>}
           </div>
 
-          {/* Erro geral */}
           {submitError && (
             <div className="bg-red-500/20 border border-red-500 text-red-300 p-3 rounded-lg">
               {submitError}
             </div>
           )}
 
-          {/* Botões */}
           <div className="flex justify-end gap-4 pt-4">
             <Link
               href="/"
@@ -309,7 +315,6 @@ export default function NovoChamado() {
           </div>
         </form>
 
-        {/* Mensagem de sucesso */}
         {showSuccess && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-[#2D3250] text-[#FFFDF7] p-8 rounded-xl shadow-lg border-t-4 border-[#E31B23] text-center max-w-md mx-4">
