@@ -105,7 +105,7 @@ export default function Navbar() {
           {/* Logo centralizado clicável */}
           <div
             className="absolute left-1/2 transform -translate-x-1/2 cursor-pointer flex items-center"
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/home')}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {

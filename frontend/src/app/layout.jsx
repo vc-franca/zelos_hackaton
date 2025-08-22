@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header/Header.jsx";
 import Footer from "@/components/Footer/Footer.jsx";
 import { AuthProvider } from "@/components/AuthContext";
+import ClientLayout from "@/components/ClientLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,9 +28,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
-          <Header></Header>
+          <ClientLayout>
           {children}
-          <Footer></Footer>
+          </ClientLayout>
         </AuthProvider>
       </body>
     </html>
