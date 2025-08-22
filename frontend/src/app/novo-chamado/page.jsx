@@ -125,7 +125,7 @@ export default function NovoChamado() {
         tipo_id: parseInt(formData.tipo_id, 10),
         tecnico_id: tecnicoId,
         usuario_id: usuarioLogadoId,
-        estado: "pendente"
+        estado: "pendente",
       };
 
       const response = await axios.post("http://localhost:8080/chamados", payload);
@@ -173,8 +173,12 @@ export default function NovoChamado() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#FFFDF7] font-sans flex items-center justify-center">
-        <div className="text-[#1B1F3B] text-xl">Carregando...</div>
+      <div className="min-h-screen bg-[#FFFDF7] flex items-center justify-center">
+        <div className="flex flex-row gap-2">
+          <div className="w-4 h-4 rounded-full bg-[#E31B23] animate-bounce"></div>
+          <div className="w-4 h-4 rounded-full bg-[#E31B23] animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-4 h-4 rounded-full bg-[#E31B23] animate-bounce [animation-delay:-0.5s]"></div>
+        </div>
       </div>
     );
   }
@@ -249,7 +253,9 @@ export default function NovoChamado() {
             <p className="text-[#FFFDF7]/60 text-xs mt-1">
               Até 7 dígitos numéricos (será completado com zeros à esquerda se necessário)
             </p>
-            {errors.numeroPatrimonio && <p className="text-red-400 mt-1 text-sm">{errors.numeroPatrimonio}</p>}
+            {errors.numeroPatrimonio && (
+              <p className="text-red-400 mt-1 text-sm">{errors.numeroPatrimonio}</p>
+            )}
           </div>
 
           <div>

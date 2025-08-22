@@ -1,13 +1,13 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image'; // Importa o componente Image do Next.js
+import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-
   const router = useRouter();
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -69,6 +69,21 @@ export default function Navbar() {
     router.push(path);
   };
 
+  // Função de logout
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:8080/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      setIsOpen(false); // Fechar o menu
+      router.push('/');
+    } catch (err) {
+      console.error('Erro ao fazer logout:', err);
+      alert('Erro ao fazer logout. Tente novamente.');
+    }
+  };
+
   return (
     <>
       <nav
@@ -84,11 +99,7 @@ export default function Navbar() {
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
-            {isOpen ? (
-              <X size={24} />
-            ) : (
-              <Menu size={24} />
-            )}
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
           {/* Logo centralizado clicável */}
@@ -97,15 +108,11 @@ export default function Navbar() {
             onClick={() => router.push('/')}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter') router.push('/'); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') router.push('/');
+            }}
           >
-            <Image
-              src="/logo.svg"
-              alt="Logo"
-              width={140}
-              height={140}
-              priority
-            />
+            <Image src="/logo.svg" alt="Logo" width={140} height={140} priority />
           </div>
 
           {/* Espaço vazio à direita para balancear */}
@@ -149,7 +156,7 @@ export default function Navbar() {
               className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
               onClick={() => handleNavigation('/meus-chamados')}
             >
-              meus Chamados
+              Meus Chamados
             </li>
             <li
               className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
@@ -157,7 +164,12 @@ export default function Navbar() {
             >
               Criar Chamado
             </li>
-            
+            <li
+              className="text-lg text-black cursor-pointer hover:text-[#E31B23] transition-colors"
+              onClick={handleLogout}
+            >
+              Sair
+            </li>
           </ul>
         </div>
       </div>

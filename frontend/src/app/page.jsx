@@ -1,17 +1,16 @@
-"use client"
-import { useState } from 'react';
-import React, { useEffect, useRef } from "react";
-import * as THREE from "three";
-import GLOBE from "vanta/dist/vanta.globe.min";
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import GLOBE from 'vanta/dist/vanta.globe.min';
 import axios from 'axios';
 
 export default function LoginPage() {
   const vantaRef = useRef(null);
   const vantaEffect = useRef(null);
-
-  // estados para armazenar email e senha
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // Estado para controlar o loading
 
   useEffect(() => {
     if (!vantaEffect.current) {
@@ -26,7 +25,7 @@ export default function LoginPage() {
         scaleMobile: 1.0,
         THREE: THREE,
         color: 0xf50000,
-        backgroundColor: 0x000000
+        backgroundColor: 0x000000,
       });
     }
     return () => {
@@ -35,19 +34,22 @@ export default function LoginPage() {
   }, []);
 
   const handleLogin = async () => {
+    setIsLoading(true); // Ativa o loading
     try {
-      const { data } = await axios.post('http://localhost:8080/auth/login',
+      const { data } = await axios.post(
+        'http://localhost:8080/auth/login',
         { email, senha },
         { withCredentials: true }
       );
-  
+
       if (!data.user) {
-        alert("Erro: usuário não retornado do backend");
+        alert('Erro: usuário não retornado do backend');
+        setIsLoading(false);
         return;
       }
-  
+
       const funcao = data.user.funcao;
-  
+
       if (funcao === 'administrador') {
         window.location.href = '/admin';
       } else if (funcao === 'tecnico') {
@@ -55,39 +57,47 @@ export default function LoginPage() {
       } else if (funcao === 'usuario') {
         window.location.href = '/home';
       }
-  
     } catch (error) {
-      console.error("Erro no login:", error.response?.data || error.message);
-      alert("Email ou senha inválidos");
+      console.error('Erro no login:', error.response?.data || error.message);
+      alert('Email ou senha inválidos');
+    } finally {
+      setIsLoading(false); // Desativa o loading
     }
   };
-  
+
+  // Se estiver carregando, exibe a animação de loading
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
+        <div className="flex flex-row gap-2">
+          <div className="w-4 h-4 rounded-full bg-[#E31B23] animate-bounce"></div>
+          <div className="w-4 h-4 rounded-full bg-[#E31B23] animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-4 h-4 rounded-full bg-[#E31B23] animate-bounce [animation-delay:-0.5s]"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       {/* Vanta.js Background */}
-      <div
-        ref={vantaRef}
-        className="absolute inset-0 w-full h-full"
-        style={{ zIndex: 0 }}
-      />
+      <div ref={vantaRef} className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }} />
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
           {/* Unified Login Container with Blur Background */}
-          <div
-            className="bg-white/15 backdrop-blur-md rounded-2xl p-12 border border-white/25 shadow-2xl"
-          >
+          <div className="bg-white/15 backdrop-blur-md rounded-2xl p-12 border border-white/25 shadow-2xl">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-
               {/* Welcome Section */}
               <div className="text-white space-y-8 text-center lg:text-left">
                 <div className="space-y-4">
-                  <h1 className="text-4xl lg:text-5xl font-bold text-transparent bg-clip-text"
+                  <h1
+                    className="text-4xl lg:text-5xl font-bold text-transparent bg-clip-text"
                     style={{
-                      backgroundImage: 'linear-gradient(to bottom, #FF0000, #3c3c3c)'
-                    }}>
+                      backgroundImage: 'linear-gradient(to bottom, #FF0000, #3c3c3c)',
+                    }}
+                  >
                     Bem-vindo
                   </h1>
                   <p className="text-lg text-gray-300">
@@ -96,15 +106,9 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-4 text-sm text-gray-400">
-                  <p>
-                    • Acesso seguro com credenciais institucionais
-                  </p>
-                  <p>
-                    • Mantenha seus dados sempre protegidos
-                  </p>
-                  <p>
-                    • Suporte 24/7 disponível
-                  </p>
+                  <p>• Acesso seguro com credenciais institucionais</p>
+                  <p>• Mantenha seus dados sempre protegidos</p>
+                  <p>• Suporte 24/7 disponível</p>
                 </div>
               </div>
 
@@ -121,7 +125,7 @@ export default function LoginPage() {
                     <label
                       className="block text-sm font-medium text-white border-l-4 pl-3"
                       style={{
-                        borderImage: 'linear-gradient(to bottom, #FF0000, #3c3c3c) 1'
+                        borderImage: 'linear-gradient(to bottom, #FF0000, #3c3c3c) 1',
                       }}
                     >
                       Email Institucional
@@ -132,6 +136,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all duration-300"
                       placeholder="seu.email@instituicao.com"
+                      disabled={isLoading} // Desativa input durante loading
                     />
                   </div>
 
@@ -140,7 +145,7 @@ export default function LoginPage() {
                     <label
                       className="block text-sm font-medium text-white border-l-4 pl-3"
                       style={{
-                        borderImage: 'linear-gradient(to bottom, #FF0000, #3c3c3c) 1'
+                        borderImage: 'linear-gradient(to bottom, #FF0000, #3c3c3c) 1',
                       }}
                     >
                       Senha
@@ -151,18 +156,20 @@ export default function LoginPage() {
                       onChange={(e) => setSenha(e.target.value)}
                       className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all duration-300"
                       placeholder="••••••••"
+                      disabled={isLoading} // Desativa input durante loading
                     />
                   </div>
 
                   {/* Login Button */}
                   <button
                     onClick={handleLogin}
-                    className="w-full py-3 px-4 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg"
+                    className="w-full py-3 px-4 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       background: 'linear-gradient(to bottom, #FF0000, #3c3c3c)',
                     }}
+                    disabled={isLoading} // Desativa botão durante loading
                   >
-                    Entrar
+                    {isLoading ? 'Entrando...' : 'Entrar'}
                   </button>
 
                   {/* Forgot Password */}
@@ -170,6 +177,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       className="text-sm text-gray-300 hover:text-white transition-colors duration-300 underline"
+                      disabled={isLoading} // Desativa botão durante loading
                     >
                       Esqueceu sua senha?
                     </button>
@@ -182,4 +190,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-};
+}
