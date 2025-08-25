@@ -26,7 +26,9 @@ const porta = process.env.PORT || 8080;
 try {
   app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-type', 'Authorization'],
+    credentials: true,
   }));
   app.use(express.json());
   
