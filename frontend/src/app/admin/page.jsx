@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect , useRef  } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Users,
@@ -11,55 +11,27 @@ import {
   Search,
   Edit,
   Trash2,
-  Eye,
   CheckCircle,
   Clock,
   AlertCircle,
   Activity
 } from 'lucide-react';
-
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 /* ============================
-   Helpers / UI small pieces
+   UI Components
    ============================ */
 
-const BASE = 'http://localhost:8080';
-
-async function apiRequest(path, opts = {}) {
-  const url = `${BASE}${path}`;
-  const headers = opts.headers || {};
-  if (!headers['Content-Type'] && !(opts.body instanceof FormData)) {
-    headers['Content-Type'] = 'application/json';
-  }
-  const res = await fetch(url, {
-    credentials: 'include',
-    ...opts,
-    headers
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    let message = res.statusText || 'Erro na requisição';
-    try {
-      const json = JSON.parse(text);
-      message = json.mensagem || json.message || JSON.stringify(json);
-    } catch { /* ignore */ }
-    throw new Error(message || `HTTP ${res.status}`);
-  }
-  if (res.status === 204) return null;
-  return res.json().catch(() => null);
-}
-
 const StatCard = ({ title, value, icon: Icon, change, color }) => (
-  <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+  <div className="bg-[#1B1F3B] p-6 rounded-xl shadow-lg border border-[#FFFDF7]/10">
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-black">{title}</p>
-        <p className="text-2xl font-bold text-black mt-1">{value}</p>
+        <p className="text-sm font-medium text-[#FFFDF7]/70">{title}</p>
+        <p className="text-2xl font-bold text-[#FFFDF7] mt-1">{value}</p>
         {change !== undefined && (
-          <p className={`text-sm mt-1 ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <p className={`text-sm mt-1 ${change > 0 ? 'text-green-400' : 'text-red-400'}`}>
             {change > 0 ? '+' : ''}{change}% vs mês anterior
           </p>
         )}
@@ -70,10 +42,6 @@ const StatCard = ({ title, value, icon: Icon, change, color }) => (
     </div>
   </div>
 );
-
-/* ============================
-   Toasts
-   ============================ */
 
 function Toasts({ toasts, removeToast }) {
   return (
@@ -90,7 +58,7 @@ function Toasts({ toasts, removeToast }) {
             {t.type === 'success' ? <CheckCircle className="w-6 h-6 text-green-600" /> : <AlertCircle className="w-6 h-6 text-red-600" />}
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-black">{t.title}</p>
+            <p className="text-sm font-semibold text-gray-900">{t.title}</p>
             <p className="text-sm text-gray-700 mt-1">{t.message}</p>
           </div>
           <button
@@ -107,13 +75,10 @@ function Toasts({ toasts, removeToast }) {
 }
 
 /* ============================
-   Modais (Chamado, Usuario, Equip)
-   - Inputs styled to match page bg (bg-gray-50)
-   - Font colors set to black where appropriate
+   Modal Components
    ============================ */
 
-// ChamadoModal
-function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], usuarios = [], loading }) {
+function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], usuarios = [], tecnicos = [], loading }) {
   const isEditing = !!initial;
   const [form, setForm] = useState({
     titulo: '',
@@ -122,9 +87,9 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
     tipo_id: '',
     tecnico_id: '',
     usuario_id: '',
-    estado: 'aberto',
-    prioridade: 'media'
+    estado: 'pendente'
   });
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     if (initial) {
@@ -132,12 +97,12 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
         titulo: initial.titulo || '',
         descricao: initial.descricao || '',
         patrimonio: initial.patrimonio ? String(initial.patrimonio).padStart(7, '0') : '',
-        tipo_id: initial.tipo_id || '',
-        tecnico_id: initial.tecnico_id || '',
-        usuario_id: initial.usuario_id || '',
-        estado: initial.estado || 'aberto',
-        prioridade: initial.prioridade || 'media'
+        tipo_id: String(initial.tipo_id || ''),
+        tecnico_id: String(initial.tecnico_id || ''),
+        usuario_id: String(initial.usuario_id || ''),
+        estado: initial.estado || 'pendente'
       });
+      setFormErrors({});
     } else {
       setForm({
         titulo: '',
@@ -146,92 +111,176 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
         tipo_id: '',
         tecnico_id: '',
         usuario_id: '',
-        estado: 'aberto',
-        prioridade: 'media'
+        estado: 'pendente'
       });
+      setFormErrors({});
     }
   }, [initial, isOpen]);
 
   if (!isOpen) return null;
 
-  const inputClass = "w-full bg-gray-50 border border-gray-200 text-black px-3 py-2 rounded-lg";
+  const validateForm = () => {
+    const errors = {};
+    if (!form.titulo) errors.titulo = 'Título é obrigatório';
+    if (!form.descricao) errors.descricao = 'Descrição é obrigatória';
+    if (!form.patrimonio || form.patrimonio.length !== 7 || !/^\d{7}$/.test(form.patrimonio)) {
+      errors.patrimonio = 'Patrimônio deve ter exatamente 7 dígitos numéricos';
+    }
+    if (!form.tipo_id) errors.tipo_id = 'Tipo é obrigatório';
+    if (!form.usuario_id) errors.usuario_id = 'Solicitante é obrigatório';
+    return errors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    const data = {
+      ...form,
+      tipo_id: form.tipo_id ? Number(form.tipo_id) : null,
+      tecnico_id: form.tecnico_id ? Number(form.tecnico_id) : null,
+      usuario_id: form.usuario_id ? Number(form.usuario_id) : null,
+      patrimonio: Number(form.patrimonio)
+    };
+
+    onSubmit(data);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'patrimonio') {
+      const numbersOnly = value.replace(/\D/g, "").slice(0, 7);
+      setForm((prev) => ({ ...prev, [name]: numbersOnly }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4 text-black">{isEditing ? 'Editar Chamado' : 'Novo Chamado'}</h2>
+      <div className="bg-[#2D3250] rounded-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold mb-4 text-[#FFFDF7]">{isEditing ? 'Editar Chamado' : 'Novo Chamado'}</h2>
 
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-black">Título</label>
-            <input required value={form.titulo} onChange={(e) => setForm({...form, titulo: e.target.value})}
-              className={inputClass} />
+            <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Título</label>
+            <input 
+              name="titulo"
+              value={form.titulo} 
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+            />
+            {formErrors.titulo && <p className="text-[#E31B23] text-xs mt-1">{formErrors.titulo}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black">Descrição</label>
-            <textarea required value={form.descricao} onChange={(e) => setForm({...form, descricao: e.target.value})}
-              className={inputClass} rows={3}/>
+            <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Descrição</label>
+            <textarea 
+              name="descricao"
+              value={form.descricao} 
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              rows={3}
+            />
+            {formErrors.descricao && <p className="text-[#E31B23] text-xs mt-1">{formErrors.descricao}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-black">Patrimônio (7 dígitos)</label>
-              <input required maxLength={7} value={form.patrimonio} onChange={(e) => setForm({...form, patrimonio: e.target.value})}
-                className={inputClass} placeholder="0000001" />
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Patrimônio (7 dígitos)</label>
+              <input 
+                name="patrimonio"
+                value={form.patrimonio} 
+                onChange={handleChange}
+                placeholder="0000001"
+                maxLength={7}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              />
+              {formErrors.patrimonio && <p className="text-[#E31B23] text-xs mt-1">{formErrors.patrimonio}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-black">Tipo</label>
-              <select required value={form.tipo_id} onChange={(e) => setForm({...form, tipo_id: e.target.value})}
-                className={inputClass}>
-                <option value="">Selecione</option>
-                {tipos.map(t => <option key={t.id} value={t.id}>{t.titulo}</option>)}
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Tipo</label>
+              <select 
+                name="tipo_id"
+                value={form.tipo_id} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+              >
+                <option value="">Selecione o tipo</option>
+                {tipos.map(t => (
+                  <option key={t.id} value={t.id}>{t.titulo}</option>
+                ))}
               </select>
+              {formErrors.tipo_id && <p className="text-[#E31B23] text-xs mt-1">{formErrors.tipo_id}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-black">Técnico</label>
-              <select value={form.tecnico_id || ''} onChange={(e) => setForm({...form, tecnico_id: e.target.value})}
-                className={inputClass}>
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Técnico</label>
+              <select 
+                name="tecnico_id"
+                value={form.tecnico_id || ''} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+              >
                 <option value="">Sem técnico</option>
-                {usuarios.filter(u => u.funcao === 'tecnico').map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                {tecnicos.map(u => (
+                  <option key={u.id} value={u.id}>{u.nome}</option>
+                ))}
               </select>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-black">Solicitante</label>
-              <select required value={form.usuario_id} onChange={(e) => setForm({...form, usuario_id: e.target.value})}
-                className={inputClass}>
-                <option value="">Selecione</option>
-                {usuarios.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Solicitante</label>
+              <select 
+                name="usuario_id"
+                value={form.usuario_id} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+              >
+                <option value="">Selecione o usuário</option>
+                {usuarios.map(u => (
+                  <option key={u.id} value={u.id}>{u.nome} ({u.funcao})</option>
+                ))}
               </select>
+              {formErrors.usuario_id && <p className="text-[#E31B23] text-xs mt-1">{formErrors.usuario_id}</p>}
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-black">Estado</label>
-              <select value={form.estado} onChange={(e) => setForm({...form, estado: e.target.value})}
-                className={inputClass}>
-                <option value="aberto">Aberto</option>
-                <option value="em_andamento">Em Andamento</option>
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Estado</label>
+              <select 
+                name="estado"
+                value={form.estado} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+              >
+                <option value="pendente">Pendente</option>
+                <option value="em andamento">Em Andamento</option>
                 <option value="concluido">Concluído</option>
               </select>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-black">Prioridade</label>
-            <select value={form.prioridade} onChange={(e) => setForm({...form, prioridade: e.target.value})}
-              className={inputClass}>
-              <option value="baixa">Baixa</option>
-              <option value="media">Média</option>
-              <option value="alta">Alta</option>
-            </select>
-          </div>
-
           <div className="flex justify-end space-x-3 pt-4">
-            <button type="button" onClick={onClose} className="bg-gray-200 px-4 py-2 rounded-lg">Cancelar</button>
-            <button type="submit" disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded-lg">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg hover:bg-[#FFFDF7]/30 transition duration-200"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 disabled:opacity-50"
+            >
               {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar')}
             </button>
           </div>
@@ -241,9 +290,15 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
   );
 }
 
-// UsuarioModal
 function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = false, loading }) {
-  const [form, setForm] = useState({ nome: '', email: '', senha: '', funcao: 'usuario', estado: 'ativo' });
+  const [form, setForm] = useState({ 
+    nome: '', 
+    email: '', 
+    senha: '', 
+    funcao: 'usuario', 
+    estado: 'ativo' 
+  });
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     if (initial) {
@@ -254,53 +309,118 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
         funcao: initial.funcao || 'usuario',
         estado: initial.estado || 'ativo'
       });
+      setFormErrors({});
     } else {
       setForm({ nome: '', email: '', senha: '', funcao: 'usuario', estado: 'ativo' });
+      setFormErrors({});
     }
   }, [initial, isOpen]);
 
   if (!isOpen) return null;
 
-  const inputClass = "w-full bg-gray-50 border border-gray-200 text-black px-3 py-2 rounded-lg";
+  const validateForm = () => {
+    const errors = {};
+    if (!form.nome) errors.nome = 'Nome é obrigatório';
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errors.email = 'Email válido é obrigatório';
+    }
+    if (!isEditing && !form.senha) {
+      errors.senha = 'Senha é obrigatória para novos usuários';
+    } else if (form.senha && form.senha.length < 6) {
+      errors.senha = 'Senha deve ter pelo menos 6 caracteres';
+    }
+    return errors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    const data = { ...form };
+    if (isEditing && !data.senha) {
+      delete data.senha;
+    }
+
+    onSubmit(data);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-md p-6">
-        <h2 className="text-xl font-bold mb-4 text-black">{isEditing ? 'Editar Usuário' : 'Novo Usuário'}</h2>
+      <div className="bg-[#2D3250] rounded-xl w-full max-w-md p-6">
+        <h2 className="text-xl font-bold mb-4 text-[#FFFDF7]">{isEditing ? 'Editar Usuário' : 'Novo Usuário'}</h2>
 
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-black">Nome</label>
-            <input required value={form.nome} onChange={(e) => setForm({...form, nome: e.target.value})}
-              className={inputClass} />
+            <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Nome</label>
+            <input 
+              name="nome"
+              value={form.nome} 
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+            />
+            {formErrors.nome && <p className="text-[#E31B23] text-xs mt-1">{formErrors.nome}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black">Email</label>
-            <input required type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})}
-              className={inputClass} />
+            <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Email</label>
+            <input 
+              type="email"
+              name="email"
+              value={form.email} 
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+            />
+            {formErrors.email && <p className="text-[#E31B23] text-xs mt-1">{formErrors.email}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black">{isEditing ? 'Nova senha (opcional)' : 'Senha'}</label>
-            <input type="password" value={form.senha} onChange={(e) => setForm({...form, senha: e.target.value})}
-              className={inputClass} required={!isEditing} />
+            <label className="block text-sm font-medium text-[#FFFDF7] mb-1">
+              {isEditing ? 'Nova senha (deixe em branco para manter a atual)' : 'Senha'}
+            </label>
+            <input 
+              type="password" 
+              name="senha"
+              value={form.senha} 
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              minLength="6"
+            />
+            {formErrors.senha && <p className="text-[#E31B23] text-xs mt-1">{formErrors.senha}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-black">Função</label>
-              <select value={form.funcao} onChange={(e) => setForm({...form, funcao: e.target.value})}
-                className={inputClass}>
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Função</label>
+              <select 
+                name="funcao"
+                value={form.funcao} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+              >
                 <option value="usuario">Usuário</option>
                 <option value="tecnico">Técnico</option>
                 <option value="administrador">Administrador</option>
               </select>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-black">Estado</label>
-              <select value={form.estado} onChange={(e) => setForm({...form, estado: e.target.value})}
-                className={inputClass}>
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Estado</label>
+              <select 
+                name="estado"
+                value={form.estado} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+              >
                 <option value="ativo">Ativo</option>
                 <option value="inativo">Inativo</option>
               </select>
@@ -308,8 +428,18 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <button type="button" onClick={onClose} className="bg-gray-200 px-4 py-2 rounded-lg">Cancelar</button>
-            <button type="submit" disabled={loading} className="bg-green-600 text-white px-4 py-2 rounded-lg">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg hover:bg-[#FFFDF7]/30 transition duration-200"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 disabled:opacity-50"
+            >
               {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar')}
             </button>
           </div>
@@ -319,41 +449,101 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
   );
 }
 
-// EquipamentoModal
-function EquipamentoModal({ isOpen, onClose, onSubmit, initial = null, loading }) {
+function TipoModal({ isOpen, onClose, onSubmit, initial = null, loading }) {
   const isEditing = !!initial;
   const [form, setForm] = useState({ titulo: '', descricao: '' });
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
-    if (initial) setForm({ titulo: initial.titulo || '', descricao: initial.descricao || '' });
-    else setForm({ titulo: '', descricao: '' });
+    if (initial) {
+      setForm({ 
+        titulo: initial.titulo || '', 
+        descricao: initial.descricao || '' 
+      });
+      setFormErrors({});
+    } else {
+      setForm({ titulo: '', descricao: '' });
+      setFormErrors({});
+    }
   }, [initial, isOpen]);
 
   if (!isOpen) return null;
 
-  const inputClass = "w-full bg-gray-50 border border-gray-200 text-black px-3 py-2 rounded-lg";
+  const validateForm = () => {
+    const errors = {};
+    if (!form.titulo) errors.titulo = 'Título é obrigatório';
+    if (!form.descricao) errors.descricao = 'Descrição é obrigatória';
+    return errors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    const data = {
+      ...form,
+      created_by: 1, // Assume admin ID, adjust if needed
+      updated_by: 1
+    };
+
+    onSubmit(data);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-md p-6">
-        <h2 className="text-xl font-bold mb-4 text-black">{isEditing ? 'Editar Tipo' : 'Novo Tipo'}</h2>
+      <div className="bg-[#2D3250] rounded-xl w-full max-w-md p-6">
+        <h2 className="text-xl font-bold mb-4 text-[#FFFDF7]">{isEditing ? 'Editar Tipo de Serviço' : 'Novo Tipo de Serviço'}</h2>
 
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-black">Título</label>
-            <input required value={form.titulo} onChange={(e) => setForm({...form, titulo: e.target.value})}
-              className={inputClass} />
+            <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Título</label>
+            <input
+              name="titulo"
+              value={form.titulo}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+              placeholder="Ex: Manutenção"
+              disabled={isEditing}
+            />
+            {formErrors.titulo && <p className="text-[#E31B23] text-xs mt-1">{formErrors.titulo}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black">Descrição</label>
-            <textarea required value={form.descricao} onChange={(e) => setForm({...form, descricao: e.target.value})}
-              className={inputClass} rows={3}/>
+            <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Descrição</label>
+            <textarea 
+              name="descricao"
+              value={form.descricao} 
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              rows={3}
+              placeholder="Descreva este tipo de serviço..."
+            />
+            {formErrors.descricao && <p className="text-[#E31B23] text-xs mt-1">{formErrors.descricao}</p>}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <button type="button" onClick={onClose} className="bg-gray-200 px-4 py-2 rounded-lg">Cancelar</button>
-            <button type="submit" disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded-lg">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg hover:bg-[#FFFDF7]/30 transition duration-200"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 disabled:opacity-50"
+            >
               {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar')}
             </button>
           </div>
@@ -364,45 +554,106 @@ function EquipamentoModal({ isOpen, onClose, onSubmit, initial = null, loading }
 }
 
 /* ============================
-   AdminPage Principal
+   Export Helper Component
+   ============================ */
+
+function ExportChamadoForm({ chamados, onExport }) {
+  const [selectedId, setSelectedId] = useState('');
+  
+  return (
+    <div className="space-y-3">
+      <select 
+        value={selectedId} 
+        onChange={(e) => setSelectedId(e.target.value)}
+        className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+      >
+        <option value="">Selecione um Chamado</option>
+        {chamados.map(c => (
+          <option key={c.id} value={c.id}>#{c.id} — {c.titulo}</option>
+        ))}
+      </select>
+
+      <div className="flex gap-2">
+        <button 
+          onClick={() => {
+            if (!selectedId) {
+              alert('Escolha um chamado');
+              return;
+            }
+            onExport(selectedId, 'pdf');
+          }} 
+          className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200"
+        >
+          Exportar PDF
+        </button>
+
+        <button 
+          onClick={() => {
+            if (!selectedId) {
+              alert('Escolha um chamado');
+              return;
+            }
+            onExport(selectedId, 'excel');
+          }} 
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
+        >
+          Exportar Excel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================
+   Main Admin Page Component
    ============================ */
 
 export default function AdminPage() {
   const router = useRouter();
 
+  // State management
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // dados
+  // Data states
   const [chamados, setChamados] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
-  const [equipamentos, setEquipamentos] = useState([]);
+  const [tecnicos, setTecnicos] = useState([]);
+  const [tipos, setTipos] = useState([]);
 
-  // estados UI
+  // UI states
   const [loading, setLoading] = useState(false);
-  const [modalChamadoOpen, setModalChamadoOpen] = useState(false);
-  const [modalUsuarioOpen, setModalUsuarioOpen] = useState(false);
-  const [modalEquipOpen, setModalEquipOpen] = useState(false);
-
-  const [editingChamado, setEditingChamado] = useState(null);
-  const [editingUsuario, setEditingUsuario] = useState(null);
-  const [editingEquip, setEditingEquip] = useState(null);
-
   const [genericLoading, setGenericLoading] = useState(false);
 
-  // Toasts
+  // Modal states
+  const [modalChamadoOpen, setModalChamadoOpen] = useState(false);
+  const [modalUsuarioOpen, setModalUsuarioOpen] = useState(false);
+  const [modalTipoOpen, setModalTipoOpen] = useState(false);
+
+  // Editing states
+  const [editingChamado, setEditingChamado] = useState(null);
+  const [editingUsuario, setEditingUsuario] = useState(null);
+  const [editingTipo, setEditingTipo] = useState(null);
+
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // Toast system
   const [toasts, setToasts] = useState([]);
   const toastTimerRef = useRef({});
 
-  const addToast = (type, title, message, duration = 3500) => {
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  const addToast = (type, title, message, duration = 4000) => {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     setToasts(prev => [...prev, { id, type, title, message }]);
-    // auto remove
+    
     if (toastTimerRef.current[id]) clearTimeout(toastTimerRef.current[id]);
     toastTimerRef.current[id] = setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
       delete toastTimerRef.current[id];
     }, duration);
   };
+
   const removeToast = (id) => {
     setToasts(prev => prev.filter(t => t.id !== id));
     if (toastTimerRef.current[id]) {
@@ -411,387 +662,586 @@ export default function AdminPage() {
     }
   };
 
-  /* fetch inicial */
+  /* ============================
+     Authentication & Data Loading
+     ============================ */
+
   useEffect(() => {
-    const fetchAll = async () => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/auth/check-auth', {
+          credentials: 'include',
+        });
+        const data = await response.json();
+        if (data.authenticated) {
+          if (data.user.funcao !== 'administrador') {
+            window.location.href = data.user.funcao === 'tecnico' ? '/tecnico' : '/home';
+            return;
+          }
+          setCurrentUser(data.user);
+        } else {
+          window.location.href = '/';
+        }
+      } catch (err) {
+        console.error('Erro ao verificar autenticação:', err);
+        addToast('error', 'Erro de Autenticação', 'Redirecionando para login...');
+        setTimeout(() => window.location.href = '/', 1000);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const [ch, us, eq] = await Promise.all([
-          apiRequest('/chamados'),
-          apiRequest('/usuarios'),
-          apiRequest('/pool'),
+        const [chamadosRes, usuariosRes, tiposRes] = await Promise.all([
+          fetch('http://localhost:8080/chamados'),
+          fetch('http://localhost:8080/usuarios'),
+          fetch('http://localhost:8080/pool')
         ]);
-        setChamados(Array.isArray(ch) ? ch : []);
-        setUsuarios(Array.isArray(us) ? us : []);
-        setEquipamentos(Array.isArray(eq) ? eq : []);
+
+        const [chamadosData, usuariosData, tiposData] = await Promise.all([
+          chamadosRes.json(),
+          usuariosRes.json(),
+          tiposRes.json()
+        ]);
+
+        setChamados(chamadosData);
+        setUsuarios(usuariosData);
+        setTecnicos(usuariosData.filter(u => u.funcao === 'tecnico'));
+        setTipos(tiposData);
       } catch (err) {
-        addToast('error','Erro', err.message || 'Erro ao carregar dados');
+        console.error('Erro ao carregar dados:', err);
+        addToast('error', 'Erro', 'Falha ao carregar dados');
       } finally {
         setLoading(false);
       }
     };
-    // check auth (basic)
-    (async () => {
-      try {
-        const auth = await apiRequest('/auth/check-auth');
-        if (!auth || !auth.authenticated) return router.push('/');
-        if (auth.user.funcao !== 'administrador') {
-          return router.push(auth.user.funcao === 'tecnico' ? '/tecnico' : '/home');
-        }
-      } catch {
-        router.push('/');
-      }
-    })();
 
-    fetchAll();
-  }, [router]);
+    fetchData();
+  }, [currentUser, activeTab]);
 
-  /* ===================
-     auxiliares
-     =================== */
-  const getCreatedDate = (t) => {
-    const s = t.criado_em || t.created_at || t.criadoEm || t.createdAt || t.created;
-    if (!s) return null;
-    const d = new Date(s);
-    return isNaN(d) ? null : d;
+  /* ============================
+     Utility Functions
+     ============================ */
+
+  const getCreatedDate = (item) => {
+    const dateStr = item.criado_em || item.created_at;
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
   };
 
-  /* ===================
-     CRUD Chamados
-     =================== */
+  const formatDate = (dateStr) => {
+    const date = getCreatedDate({ criado_em: dateStr });
+    return date ? date.toLocaleDateString('pt-BR') : 'N/A';
+  };
+
+  const getUserName = (userId) => {
+    const user = usuarios.find(u => u.id === userId);
+    return user ? user.nome : 'N/A';
+  };
+
+  const getTipoName = (tipoId) => {
+    const tipo = tipos.find(e => e.id === tipoId);
+    return tipo ? tipo.titulo : 'N/A';
+  };
+
+  const getStatusBadge = (estado) => {
+    const statusConfig = {
+      pendente: { label: "Pendente", color: "yellow-500" },
+      'em andamento': { label: "Em Andamento", color: "blue-500" },
+      concluido: { label: "Concluído", color: "green-500" },
+    };
+
+    const config = statusConfig[estado] || { label: estado, color: "gray-500" };
+    return <span className={`px-2 py-1 rounded-full text-xs font-medium bg-${config.color}/20 text-${config.color}`}>{config.label}</span>;
+  };
+
+  /* ============================
+     CRUD Operations - Chamados
+     ============================ */
+
   const createChamado = async (payload) => {
     try {
       setGenericLoading(true);
-      const body = {
-        ...payload,
-        patrimonio: Number(String(payload.patrimonio || '').replace(/\D/g,'')),
-        tipo_id: payload.tipo_id ? Number(payload.tipo_id) : null,
-        tecnico_id: payload.tecnico_id ? Number(payload.tecnico_id) : null,
-        usuario_id: payload.usuario_id ? Number(payload.usuario_id) : null,
-        estado: payload.estado || 'aberto',
-        prioridade: payload.prioridade || 'media'
-      };
-      const res = await apiRequest('/chamados', { method: 'POST', body: JSON.stringify(body) });
-      setChamados(prev => [res, ...prev]);
+      await fetch('http://localhost:8080/chamados', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const updatedChamados = await fetch('http://localhost:8080/chamados').then(res => res.json());
+      setChamados(updatedChamados);
+      
       setModalChamadoOpen(false);
       setEditingChamado(null);
-      addToast('success','Chamado criado','Chamado criado com sucesso');
+      addToast('success', 'Sucesso', 'Chamado criado com sucesso');
     } catch (err) {
-      addToast('error','Erro ao criar', err.message);
-    } finally { setGenericLoading(false); }
+      addToast('error', 'Erro ao criar chamado', err.message);
+    } finally {
+      setGenericLoading(false);
+    }
   };
 
   const updateChamado = async (id, payload) => {
     try {
       setGenericLoading(true);
-      const atual = await apiRequest(`/chamados/${id}`);
-      const body = {
-        titulo: payload.titulo ?? atual.titulo,
-        patrimonio: Number(String(payload.patrimonio || atual.patrimonio || '').replace(/\D/g,'')),
-        descricao: payload.descricao ?? atual.descricao,
-        tipo_id: payload.tipo_id ? Number(payload.tipo_id) : atual.tipo_id,
-        tecnico_id: payload.tecnico_id ? Number(payload.tecnico_id) : atual.tecnico_id,
-        usuario_id: payload.usuario_id ? Number(payload.usuario_id) : atual.usuario_id,
-        estado: payload.estado ?? atual.estado
-      };
-      const res = await apiRequest(`/chamados/${id}`, { method: 'PUT', body: JSON.stringify(body) });
-      setChamados(prev => prev.map(c => c.id === id ? res : c));
+      await fetch(`http://localhost:8080/chamados/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const updatedChamados = await fetch('http://localhost:8080/chamados').then(res => res.json());
+      setChamados(updatedChamados);
+      
       setModalChamadoOpen(false);
       setEditingChamado(null);
-      addToast('success','Chamado atualizado','Alterações salvas com sucesso');
+      addToast('success', 'Sucesso', 'Chamado atualizado com sucesso');
     } catch (err) {
-      addToast('error','Erro ao atualizar', err.message);
-    } finally { setGenericLoading(false); }
+      addToast('error', 'Erro ao atualizar chamado', err.message);
+    } finally {
+      setGenericLoading(false);
+    }
   };
 
   const deleteChamado = async (id) => {
-    if (!confirm('Confirmar exclusão do chamado?')) return;
+    if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
+    
     try {
-      await apiRequest(`/chamados/${id}`, { method: 'DELETE' });
+      await fetch(`http://localhost:8080/chamados/${id}`, { method: 'DELETE' });
       setChamados(prev => prev.filter(c => c.id !== id));
-      addToast('success','Chamado excluído','Chamado removido com sucesso');
+      addToast('success', 'Sucesso', 'Chamado excluído com sucesso');
     } catch (err) {
-      addToast('error','Erro ao excluir', err.message);
+      addToast('error', 'Erro ao excluir chamado', err.message);
     }
   };
 
-  const changeChamadoEstado = async (id, novoEstado) => {
+  const updateChamadoStatus = async (id, newStatus) => {
     try {
-      setGenericLoading(true);
-      const atual = await apiRequest(`/chamados/${id}`);
-      const payload = {
-        titulo: atual.titulo,
-        patrimonio: atual.patrimonio,
-        descricao: atual.descricao,
-        tipo_id: atual.tipo_id,
-        tecnico_id: atual.tecnico_id,
-        usuario_id: atual.usuario_id,
-        estado: novoEstado
-      };
-      const res = await apiRequest(`/chamados/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
-      setChamados(prev => prev.map(c => c.id === id ? res : c));
-      addToast('success','Estado atualizado', `Status alterado para "${novoEstado}"`);
+      await fetch(`http://localhost:8080/chamados/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: newStatus })
+      });
+      setChamados(prev => prev.map(c => c.id === id ? { ...c, estado: newStatus } : c));
+      addToast('success', 'Sucesso', 'Status atualizado');
     } catch (err) {
-      addToast('error','Erro ao atualizar', err.message);
-    } finally { setGenericLoading(false); }
-  };
-
-  const changeChamadoPrioridade = async (id, novaPrioridade) => {
-    try {
-      const atual = await apiRequest(`/chamados/${id}`);
-      const payload = { ...atual, prioridade: novaPrioridade };
-      const res = await apiRequest(`/chamados/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
-      setChamados(prev => prev.map(c => c.id === id ? res : c));
-      addToast('success','Prioridade atualizada', `Prioridade: ${novaPrioridade}`);
-    } catch (err) {
-      addToast('error','Erro ao atualizar', err.message);
+      addToast('error', 'Erro', 'Falha ao atualizar status');
     }
   };
 
-  /* ===================
-     CRUD Usuarios
-     =================== */
+  /* ============================
+     CRUD Operations - Usuarios
+     ============================ */
+
   const createUsuario = async (payload) => {
     try {
       setGenericLoading(true);
-      const body = {
-        nome: payload.nome,
-        email: payload.email,
-        senha: payload.senha,
-        funcao: payload.funcao || 'usuario',
-        estado: payload.estado || 'ativo'
-      };
-      const res = await apiRequest('/usuarios', { method: 'POST', body: JSON.stringify(body) });
-      setUsuarios(prev => [res, ...prev]);
+      await fetch('http://localhost:8080/usuarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const updatedUsuarios = await fetch('http://localhost:8080/usuarios').then(res => res.json());
+      setUsuarios(updatedUsuarios);
+      setTecnicos(updatedUsuarios.filter(u => u.funcao === 'tecnico'));
+      
       setModalUsuarioOpen(false);
       setEditingUsuario(null);
-      addToast('success','Usuário criado','Usuário criado com sucesso');
+      addToast('success', 'Sucesso', 'Usuário criado com sucesso');
     } catch (err) {
-      addToast('error','Erro ao criar', err.message);
-    } finally { setGenericLoading(false); }
+      addToast('error', 'Erro ao criar usuário', err.message);
+    } finally {
+      setGenericLoading(false);
+    }
   };
 
   const updateUsuario = async (id, payload) => {
     try {
       setGenericLoading(true);
-      const body = {
-        nome: payload.nome,
-        email: payload.email,
-        ...(payload.senha ? { senha: payload.senha } : {}),
-        funcao: payload.funcao,
-        estado: payload.estado
-      };
-      const res = await apiRequest(`/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(body) });
-      setUsuarios(prev => prev.map(u => u.id === id ? res : u));
+      await fetch(`http://localhost:8080/usuarios/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const updatedUsuarios = await fetch('http://localhost:8080/usuarios').then(res => res.json());
+      setUsuarios(updatedUsuarios);
+      setTecnicos(updatedUsuarios.filter(u => u.funcao === 'tecnico'));
+      
       setModalUsuarioOpen(false);
       setEditingUsuario(null);
-      addToast('success','Usuário atualizado','Alterações salvas');
+      addToast('success', 'Sucesso', 'Usuário atualizado com sucesso');
     } catch (err) {
-      addToast('error','Erro ao atualizar', err.message);
-    } finally { setGenericLoading(false); }
+      addToast('error', 'Erro ao atualizar usuário', err.message);
+    } finally {
+      setGenericLoading(false);
+    }
   };
 
   const deleteUsuario = async (id) => {
-    if (!confirm('Confirmar exclusão do usuário?')) return;
+    if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+    
     try {
-      await apiRequest(`/usuarios/${id}`, { method: 'DELETE' });
+      await fetch(`http://localhost:8080/usuarios/${id}`, { method: 'DELETE' });
       setUsuarios(prev => prev.filter(u => u.id !== id));
-      addToast('success','Usuário excluído','Usuário removido com sucesso');
+      setTecnicos(prev => prev.filter(u => u.id !== id));
+      addToast('success', 'Sucesso', 'Usuário excluído com sucesso');
     } catch (err) {
-      addToast('error','Erro ao excluir', err.message);
+      addToast('error', 'Erro ao excluir usuário', err.message);
     }
   };
 
-  /* ===================
-     CRUD Equipamentos (pool)
-     =================== */
-  const createEquip = async (payload) => {
+  /* ============================
+     CRUD Operations - Tipos (Pool)
+     ============================ */
+
+  const createTipo = async (payload) => {
     try {
       setGenericLoading(true);
-      const body = { titulo: payload.titulo, descricao: payload.descricao, created_by: 1, updated_by: 1 };
-      const res = await apiRequest('/pool', { method: 'POST', body: JSON.stringify(body) });
-      setEquipamentos(prev => [res, ...prev]);
-      setModalEquipOpen(false);
-      setEditingEquip(null);
-      addToast('success','Tipo criado','Tipo de serviço criado com sucesso');
+      await fetch('http://localhost:8080/pool', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const updatedTipos = await fetch('http://localhost:8080/pool').then(res => res.json());
+      setTipos(updatedTipos);
+      
+      setModalTipoOpen(false);
+      setEditingTipo(null);
+      addToast('success', 'Sucesso', 'Tipo de serviço criado com sucesso');
     } catch (err) {
-      addToast('error','Erro ao criar', err.message);
-    } finally { setGenericLoading(false); }
-  };
-
-  const updateEquip = async (id, payload) => {
-    try {
-      setGenericLoading(true);
-      const body = { titulo: payload.titulo, descricao: payload.descricao, updated_by: 1 };
-      const res = await apiRequest(`/pool/${id}`, { method: 'PUT', body: JSON.stringify(body) });
-      setEquipamentos(prev => prev.map(e => e.id === id ? res : e));
-      setModalEquipOpen(false);
-      setEditingEquip(null);
-      addToast('success','Tipo atualizado','Alterações salvas');
-    } catch (err) {
-      addToast('error','Erro ao atualizar', err.message);
-    } finally { setGenericLoading(false); }
-  };
-
-  const deleteEquip = async (id) => {
-    if (!confirm('Confirmar exclusão do tipo?')) return;
-    try {
-      await apiRequest(`/pool/${id}`, { method: 'DELETE' });
-      setEquipamentos(prev => prev.filter(e => e.id !== id));
-      addToast('success','Tipo excluído','Tipo removido com sucesso');
-    } catch (err) {
-      addToast('error','Erro ao excluir', err.message);
+      addToast('error', 'Erro ao criar tipo', err.message);
+    } finally {
+      setGenericLoading(false);
     }
   };
 
-  /* ===================
-     Export (PDF / Excel)
-     =================== */
-
-  const exportToPDF = (rows, filename = 'relatorio') => {
-    const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text(filename, 14, 16);
-    const body = rows.map(r => [
-      r.id,
-      r.titulo,
-      (usuarios.find(u => u.id === r.usuario_id)?.nome) || r.usuario_id || 'N/A',
-      r.estado || r.estado,
-      (getCreatedDate(r) ? getCreatedDate(r).toLocaleDateString('pt-BR') : 'N/A')
-    ]);
-    autoTable(doc, {
-      startY: 22,
-      head: [['ID','Título','Usuário','Status','Data']],
-      body
-    });
-    doc.save(`${filename}.pdf`);
-    addToast('success','Exportado PDF', `${filename}.pdf gerado`);
+  const updateTipo = async (id, payload) => {
+    try {
+      setGenericLoading(true);
+      await fetch(`http://localhost:8080/pool/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const updatedTipos = await fetch('http://localhost:8080/pool').then(res => res.json());
+      setTipos(updatedTipos);
+      
+      setModalTipoOpen(false);
+      setEditingTipo(null);
+      addToast('success', 'Sucesso', 'Tipo de serviço atualizado com sucesso');
+    } catch (err) {
+      addToast('error', 'Erro ao atualizar tipo', err.message);
+    } finally {
+      setGenericLoading(false);
+    }
   };
 
-  const exportToExcel = (rows, filename = 'relatorio') => {
-    const data = rows.map(r => ({
-      ID: r.id,
-      Título: r.titulo,
-      Usuário: usuarios.find(u => u.id === r.usuario_id)?.nome || r.usuario_id || 'N/A',
-      Estado: r.estado,
-      Data: getCreatedDate(r) ? getCreatedDate(r).toLocaleDateString('pt-BR') : ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Relatorio');
-    XLSX.writeFile(wb, `${filename}.xlsx`);
-    addToast('success','Exportado Excel', `${filename}.xlsx gerado`);
+  const deleteTipo = async (id) => {
+    if (!confirm('Tem certeza que deseja excluir este tipo de serviço?')) return;
+    
+    try {
+      await fetch(`http://localhost:8080/pool/${id}`, { method: 'DELETE' });
+      setTipos(prev => prev.filter(e => e.id !== id));
+      addToast('success', 'Sucesso', 'Tipo de serviço excluído com sucesso');
+    } catch (err) {
+      addToast('error', 'Erro ao excluir tipo', err.message);
+    }
+  };
+
+  /* ============================
+     Export Functions
+     ============================ */
+
+  const exportToPDF = (data, filename = 'relatorio') => {
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text(filename, 14, 20);
+      
+      const tableData = data.map(item => [
+        item.id || '',
+        item.titulo || '',
+        getUserName(item.usuario_id) || '',
+        item.estado || '',
+        formatDate(item.criado_em) || ''
+      ]);
+
+      autoTable(doc, {
+        startY: 30,
+        head: [['ID', 'Título', 'Solicitante', 'Status', 'Data']],
+        body: tableData,
+        styles: { fontSize: 10 }
+      });
+
+      doc.save(`${filename}.pdf`);
+      addToast('success', 'PDF Exportado', `${filename}.pdf foi gerado com sucesso`);
+    } catch (err) {
+      addToast('error', 'Erro na exportação', 'Falha ao gerar PDF');
+    }
+  };
+
+  const exportToExcel = (data, filename = 'relatorio') => {
+    try {
+      const excelData = data.map(item => ({
+        ID: item.id || '',
+        Título: item.titulo || '',
+        Solicitante: getUserName(item.usuario_id) || '',
+        Status: item.estado || '',
+        Data: formatDate(item.criado_em) || '',
+        Descrição: item.descricao || '',
+        Patrimônio: item.patrimonio || '',
+        Tipo: getTipoName(item.tipo_id) || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+      XLSX.writeFile(wb, `${filename}.xlsx`);
+      addToast('success', 'Excel Exportado', `${filename}.xlsx foi gerado com sucesso`);
+    } catch (err) {
+      addToast('error', 'Erro na exportação', 'Falha ao gerar Excel');
+    }
   };
 
   const exportChamadoById = (id, type = 'pdf') => {
-    const item = chamados.find(c => String(c.id) === String(id));
-    if (!item) return addToast('error','Chamado não encontrado','Escolha um ID válido');
-    if (type === 'pdf') exportToPDF([item], `Chamado_${item.id}`);
-    else exportToExcel([item], `Chamado_${item.id}`);
+    const chamado = chamados.find(c => c.id === Number(id));
+    if (!chamado) {
+      addToast('error', 'Chamado não encontrado', 'Selecione um chamado válido');
+      return;
+    }
+
+    const filename = `Chamado_${chamado.id}`;
+    if (type === 'pdf') {
+      exportToPDF([chamado], filename);
+    } else {
+      exportToExcel([chamado], filename);
+    }
   };
 
   const exportChamadosRange = (range = 'week', type = 'pdf') => {
     const now = new Date();
-    let start;
+    let startDate;
+    
     if (range === 'week') {
-      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    } else {
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (range === 'month') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
-    const filtered = chamados.filter(c => {
-      const d = getCreatedDate(c);
-      return d && d >= start && d <= now;
+
+    const filteredChamados = chamados.filter(chamado => {
+      const chamadoDate = getCreatedDate(chamado);
+      return chamadoDate && chamadoDate >= startDate && chamadoDate <= now;
     });
-    if (filtered.length === 0) return addToast('error','Nenhum chamado','Nenhum chamado no período');
-    if (type === 'pdf') exportToPDF(filtered, `Chamados_${range}`);
-    else exportToExcel(filtered, `Chamados_${range}`);
+
+    if (filteredChamados.length === 0) {
+      addToast('error', 'Nenhum dado encontrado', `Nenhum chamado encontrado para o período: ${range}`);
+      return;
+    }
+
+    const filename = `Chamados_${range}_${now.toISOString().split('T')[0]}`;
+    if (type === 'pdf') {
+      exportToPDF(filteredChamados, filename);
+    } else {
+      exportToExcel(filteredChamados, filename);
+    }
   };
 
-  /* ===================
-     UI Render
-     =================== */
+  /* ============================
+     Filter Functions
+     ============================ */
 
-  const inputClassMain = "w-full bg-gray-50 border border-gray-200 text-black px-3 py-2 rounded-lg";
+  const filteredChamados = chamados.filter(chamado => {
+    const matchesSearch = searchTerm === '' || 
+      chamado.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getUserName(chamado.usuario_id).toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === '' || chamado.estado === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  /* ============================
+     Statistics Calculations
+     ============================ */
+
+  const stats = {
+    total: chamados.length,
+    pendentes: chamados.filter(c => c.estado === 'pendente').length,
+    emAndamento: chamados.filter(c => c.estado === 'em andamento').length,
+    concluidos: chamados.filter(c => c.estado === 'concluido').length
+  };
+
+  /* ============================
+     Logout Function
+     ============================ */
+
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:8080/auth/logout', { method: 'POST', credentials: 'include' });
+      router.push('/');
+    } catch (err) {
+      addToast('error', 'Erro', 'Falha ao fazer logout');
+    }
+  };
+
+  /* ============================
+     Render Component
+     ============================ */
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#2D3250] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E31B23] mx-auto"></div>
+          <p className="mt-4 text-[#FFFDF7]">Carregando painel administrativo...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-black">
+    <div className="min-h-screen bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7]">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <h1 className="text-3xl font-bold text-black flex items-center space-x-3">
-              <BarChart3 className="w-6 h-6" />
-              <span>Painel Administrativo</span>
-            </h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-black">Admin</span>
-              <button onClick={() => { apiRequest('/auth/logout', { method: 'POST' }).catch(()=>{}); router.push('/'); }}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200">
-                Sair
-              </button>
-            </div>
+      <header className="bg-[#1B1F3B] shadow-sm border-b border-[#FFFDF7]/10 py-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <h1 className="text-3xl font-bold flex items-center space-x-3">
+            <BarChart3 className="w-8 h-8 text-[#E31B23]" />
+            <span>Painel Administrativo</span>
+          </h1>
+          <div className="flex items-center space-x-4">
+            <span>
+              Bem-vindo, <span className="font-semibold">{currentUser?.nome || 'Admin'}</span>
+            </span>
+            <button 
+              onClick={handleLogout}
+              className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200"
+            >
+              Sair
+            </button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Tabs */}
-        <nav className="flex space-x-4 mb-8">
+        {/* Navigation Tabs */}
+        <nav className="flex space-x-4 mb-8 overflow-x-auto">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'chamados', label: 'Chamados', icon: Ticket },
             { id: 'usuarios', label: 'Usuários', icon: Users },
-            { id: 'equipamentos', label: 'Tipos', icon: Settings },
+            { id: 'tipos', label: 'Tipos de Serviço', icon: Settings },
             { id: 'relatorios', label: 'Relatórios', icon: Activity }
-          ].map(t => {
-            const Icon = t.icon;
+          ].map(tab => {
+            const Icon = tab.icon;
             return (
-              <button key={t.id} onClick={() => setActiveTab(t.id)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition duration-200 ${activeTab === t.id ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
+              <button 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition duration-200 whitespace-nowrap ${
+                  activeTab === tab.id 
+                    ? 'bg-[#E31B23]/20 text-[#E31B23] border border-[#E31B23]/30' 
+                    : 'text-[#FFFDF7]/70 hover:text-[#FFFDF7] hover:bg-[#1B1F3B]'
+                }`}
+              >
                 <Icon className="w-5 h-5" />
-                <span>{t.label}</span>
+                <span className="font-medium">{tab.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* Error messages replaced by toasts */}
-        {/* TAB: dashboard */}
+        {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard title="Total Chamados" value={chamados.length} icon={Ticket} change={12} color="bg-blue-500" />
-              <StatCard title="Abertos" value={chamados.filter(c => c.estado === 'aberto').length} icon={AlertCircle} change={-5} color="bg-red-500" />
-              <StatCard title="Em Andamento" value={chamados.filter(c => c.estado === 'em_andamento').length} icon={Clock} change={8} color="bg-yellow-500" />
-              <StatCard title="Concluídos" value={chamados.filter(c => c.estado === 'concluido').length} icon={CheckCircle} change={15} color="bg-green-500" />
+              <StatCard 
+                title="Total de Chamados" 
+                value={stats.total} 
+                icon={Ticket} 
+                color="bg-blue-500" 
+              />
+              <StatCard 
+                title="Pendentes" 
+                value={stats.pendentes} 
+                icon={AlertCircle} 
+                color="bg-[#E31B23]" 
+              />
+              <StatCard 
+                title="Em Andamento" 
+                value={stats.emAndamento} 
+                icon={Clock} 
+                color="bg-yellow-500" 
+              />
+              <StatCard 
+                title="Concluídos" 
+                value={stats.concluidos} 
+                icon={CheckCircle} 
+                color="bg-green-500" 
+              />
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-              <h3 className="text-lg font-semibold text-black mb-4">Chamados Recentes</h3>
+            <div className="bg-[#1B1F3B] rounded-xl shadow-lg border border-[#FFFDF7]/10">
+              <div className="px-6 py-4 border-b border-[#FFFDF7]/10">
+                <h3 className="text-lg font-semibold">Chamados Recentes</h3>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
+                <table className="w-full">
+                  <thead className="bg-[#2D3250]">
                     <tr>
-                      <th className="px-4 py-2 text-left">ID</th>
-                      <th className="px-4 py-2 text-left">Título</th>
-                      <th className="px-4 py-2 text-left">Solicitante</th>
-                      <th className="px-4 py-2 text-left">Estado</th>
-                      <th className="px-4 py-2 text-left">Data</th>
-                      <th className="px-4 py-2 text-left">Ações</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Título</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Solicitante</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Data</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {chamados.slice(0,5).map(c => (
-                      <tr key={c.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2">#{c.id}</td>
-                        <td className="px-4 py-2">{c.titulo}</td>
-                        <td className="px-4 py-2">{usuarios.find(u=>u.id===c.usuario_id)?.nome || 'N/A'}</td>
-                        <td className="px-4 py-2">{c.estado}</td>
-                        <td className="px-4 py-2">{getCreatedDate(c)?.toLocaleDateString('pt-BR') || 'N/A'}</td>
-                        <td className="px-4 py-2">
-                          <div className="flex gap-2">
-                            <button onClick={() => { setEditingChamado(c); setModalChamadoOpen(true); }} className="text-green-600 p-1"><Edit className="w-4 h-4"/></button>
-                            <button onClick={() => deleteChamado(c.id)} className="text-red-600 p-1"><Trash2 className="w-4 h-4"/></button>
+                  <tbody className="divide-y divide-[#FFFDF7]/10">
+                    {chamados.slice(0, 10).map(chamado => (
+                      <tr key={chamado.id} className="hover:bg-[#2D3250]">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          #{chamado.id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {chamado.titulo}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {getUserName(chamado.usuario_id)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(chamado.estado)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {formatDate(chamado.criado_em)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => {
+                                setEditingChamado(chamado);
+                                setModalChamadoOpen(true);
+                              }}
+                              className="text-blue-400 hover:text-blue-300"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => deleteChamado(chamado.id)}
+                              className="text-[#E31B23] hover:text-[#C5161D]"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -803,81 +1253,117 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB: chamados */}
+        {/* Chamados Tab */}
         {activeTab === 'chamados' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-black">Gerenciar Chamados</h2>
-              <button onClick={() => { setEditingChamado(null); setModalChamadoOpen(true); }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <Plus className="w-5 h-5"/> Novo Chamado
+              <h2 className="text-2xl font-bold">Gerenciar Chamados</h2>
+              <button 
+                onClick={() => {
+                  setEditingChamado(null);
+                  setModalChamadoOpen(true);
+                }}
+                className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 flex items-center space-x-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Novo Chamado</span>
               </button>
             </div>
 
-            <div className="bg-white p-4 rounded-lg">
-              <div className="flex gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"/>
-                  <input placeholder="Buscar..." className={`${inputClassMain} pl-10`} />
+            <div className="bg-[#1B1F3B] p-4 rounded-lg border border-[#FFFDF7]/10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFFDF7]/70 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Buscar chamados..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 p-3 rounded-lg bg-[#2D3250] text-[#FFFDF7] border border-[#2D3250] focus:border-[#E31B23] focus:outline-none"
+                  />
                 </div>
-                <select className={inputClassMain}>
-                  <option value="">Todos</option>
-                  <option value="aberto">Aberto</option>
-                  <option value="em_andamento">Em Andamento</option>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full p-3 rounded-lg bg-[#2D3250] text-[#FFFDF7] border border-[#2D3250] focus:border-[#E31B23] focus:outline-none"
+                >
+                  <option value="">Todos os status</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="em andamento">Em Andamento</option>
                   <option value="concluido">Concluído</option>
                 </select>
+                <div className="text-sm text-[#FFFDF7]/70 flex items-center">
+                  Mostrando {filteredChamados.length} de {chamados.length} chamados
+                </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-black">Chamados</h3>
-              </div>
-
+            <div className="bg-[#1B1F3B] rounded-xl shadow-lg border border-[#FFFDF7]/10">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-[#2D3250]">
                     <tr>
-                      <th className="px-6 py-3 text-left">ID</th>
-                      <th className="px-6 py-3 text-left">Título</th>
-                      <th className="px-6 py-3 text-left">Patrimônio</th>
-                      <th className="px-6 py-3 text-left">Estado</th>
-                      <th className="px-6 py-3 text-left">Prioridade</th>
-                      <th className="px-6 py-3 text-left">Data</th>
-                      <th className="px-6 py-3 text-left">Ações</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Título</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Patrimônio</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tipo</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Solicitante</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Data</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {loading ? (
-                      <tr><td colSpan="7" className="p-6 text-center">Carregando...</td></tr>
-                    ) : chamados.length === 0 ? (
-                      <tr><td colSpan="7" className="p-6 text-center text-gray-500">Nenhum chamado</td></tr>
-                    ) : chamados.map(c => (
-                      <tr key={c.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">#{c.id}</td>
-                        <td className="px-6 py-4">{c.titulo}</td>
-                        <td className="px-6 py-4">{c.patrimonio}</td>
-                        <td className="px-6 py-4">
-                          <select value={c.estado} onChange={(e) => changeChamadoEstado(c.id, e.target.value)}
-                            className="px-2 py-1 rounded-full text-xs bg-gray-50 border border-gray-200">
-                            <option value="aberto">Aberto</option>
-                            <option value="em_andamento">Em Andamento</option>
-                            <option value="concluido">Concluído</option>
-                          </select>
+                  <tbody className="divide-y divide-[#FFFDF7]/10">
+                    {filteredChamados.length === 0 ? (
+                      <tr>
+                        <td colSpan="8" className="px-6 py-8 text-center text-[#FFFDF7]/70">
+                          Nenhum chamado encontrado
                         </td>
-                        <td className="px-6 py-4">
-                          <select value={c.prioridade || 'media'} onChange={(e) => changeChamadoPrioridade(c.id, e.target.value)}
-                            className="px-2 py-1 rounded-full text-xs bg-gray-50 border border-gray-200">
-                            <option value="baixa">Baixa</option>
-                            <option value="media">Média</option>
-                            <option value="alta">Alta</option>
-                          </select>
+                      </tr>
+                    ) : filteredChamados.map(chamado => (
+                      <tr key={chamado.id} className="hover:bg-[#2D3250]">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          #{chamado.id}
                         </td>
-                        <td className="px-6 py-4">{getCreatedDate(c)?.toLocaleDateString('pt-BR') || 'N/A'}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            <button onClick={() => { setEditingChamado(c); setModalChamadoOpen(true); }} className="text-green-600"><Edit className="w-4 h-4"/></button>
-                            <button onClick={() => deleteChamado(c.id)} className="text-red-600"><Trash2 className="w-4 h-4"/></button>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="max-w-xs truncate" title={chamado.titulo}>
+                            {chamado.titulo}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {String(chamado.patrimonio).padStart(7, '0')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {getTipoName(chamado.tipo_id)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(chamado.estado)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {getUserName(chamado.usuario_id)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {formatDate(chamado.criado_em)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => {
+                                setEditingChamado(chamado);
+                                setModalChamadoOpen(true);
+                              }}
+                              className="text-blue-400 hover:text-blue-300"
+                              title="Editar"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => deleteChamado(chamado.id)}
+                              className="text-[#E31B23] hover:text-[#C5161D]"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -885,54 +1371,93 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
-
             </div>
           </div>
         )}
 
-        {/* TAB: usuarios */}
+        {/* Usuarios Tab */}
         {activeTab === 'usuarios' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-black">Gerenciar Usuários</h2>
-              <button onClick={() => { setEditingUsuario(null); setModalUsuarioOpen(true); }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <Plus className="w-5 h-5"/> Novo Usuário
+              <h2 className="text-2xl font-bold">Gerenciar Usuários</h2>
+              <button 
+                onClick={() => {
+                  setEditingUsuario(null);
+                  setModalUsuarioOpen(true);
+                }}
+                className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 flex items-center space-x-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Novo Usuário</span>
               </button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-black">Usuários</h3>
-              </div>
+            <div className="bg-[#1B1F3B] rounded-xl shadow-lg border border-[#FFFDF7]/10">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-[#2D3250]">
                     <tr>
-                      <th className="px-6 py-3 text-left">ID</th>
-                      <th className="px-6 py-3 text-left">Nome</th>
-                      <th className="px-6 py-3 text-left">Email</th>
-                      <th className="px-6 py-3 text-left">Função</th>
-                      <th className="px-6 py-3 text-left">Estado</th>
-                      <th className="px-6 py-3 text-left">Ações</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nome</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Função</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Estado</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-[#FFFDF7]/10">
                     {usuarios.length === 0 ? (
-                      <tr><td colSpan="6" className="p-6 text-center text-gray-500">Nenhum usuário</td></tr>
-                    ) : usuarios.map(u => (
-                      <tr key={u.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">#{u.id}</td>
-                        <td className="px-6 py-4">{u.nome}</td>
-                        <td className="px-6 py-4">{u.email}</td>
-                        <td className="px-6 py-4">{u.funcao}</td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex px-2 py-1 rounded-full text-xs ${u.estado === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{u.estado}</span>
+                      <tr>
+                        <td colSpan="6" className="px-6 py-8 text-center text-[#FFFDF7]/70">
+                          Nenhum usuário encontrado
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            <button onClick={() => { setEditingUsuario(u); setModalUsuarioOpen(true); }} className="text-green-600"><Edit className="w-4 h-4"/></button>
-                            <button onClick={() => deleteUsuario(u.id)} className="text-red-600"><Trash2 className="w-4 h-4"/></button>
+                      </tr>
+                    ) : usuarios.map(usuario => (
+                      <tr key={usuario.id} className="hover:bg-[#2D3250]">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          #{usuario.id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {usuario.nome}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {usuario.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            usuario.funcao === 'administrador' ? 'bg-purple-500/20 text-purple-400' :
+                            usuario.funcao === 'tecnico' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-gray-500/20 text-gray-400'
+                          }`}>
+                            {usuario.funcao}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            usuario.estado === 'ativo' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                          }`}>
+                            {usuario.estado}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => {
+                                setEditingUsuario(usuario);
+                                setModalUsuarioOpen(true);
+                              }}
+                              className="text-blue-400 hover:text-blue-300"
+                              title="Editar"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => deleteUsuario(usuario.id)}
+                              className="text-[#E31B23] hover:text-[#C5161D]"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -944,43 +1469,71 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB: equipamentos */}
-        {activeTab === 'equipamentos' && (
+        {/* Tipos de Serviço Tab */}
+        {activeTab === 'tipos' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-black">Gerenciar Tipos</h2>
-              <button onClick={() => { setEditingEquip(null); setModalEquipOpen(true); }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                <Plus className="w-5 h-5"/> Novo Tipo
+              <h2 className="text-2xl font-bold">Gerenciar Tipos de Serviço</h2>
+              <button 
+                onClick={() => {
+                  setEditingTipo(null);
+                  setModalTipoOpen(true);
+                }}
+                className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 flex items-center space-x-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Novo Tipo</span>
               </button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-black">Tipos de Serviço</h3>
-              </div>
+            <div className="bg-[#1B1F3B] rounded-xl shadow-lg border border-[#FFFDF7]/10">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-[#2D3250]">
                     <tr>
-                      <th className="px-6 py-3 text-left">ID</th>
-                      <th className="px-6 py-3 text-left">Título</th>
-                      <th className="px-6 py-3 text-left">Descrição</th>
-                      <th className="px-6 py-3 text-left">Ações</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Título</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Descrição</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {equipamentos.length === 0 ? (
-                      <tr><td colSpan="4" className="p-6 text-center text-gray-500">Nenhum tipo</td></tr>
-                    ) : equipamentos.map(e => (
-                      <tr key={e.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">#{e.id}</td>
-                        <td className="px-6 py-4">{e.titulo}</td>
-                        <td className="px-6 py-4">{e.descricao}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            <button onClick={() => { setEditingEquip(e); setModalEquipOpen(true); }} className="text-green-600"><Edit className="w-4 h-4"/></button>
-                            <button onClick={() => deleteEquip(e.id)} className="text-red-600"><Trash2 className="w-4 h-4"/></button>
+                  <tbody className="divide-y divide-[#FFFDF7]/10">
+                    {tipos.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="px-6 py-8 text-center text-[#FFFDF7]/70">
+                          Nenhum tipo de serviço encontrado
+                        </td>
+                      </tr>
+                    ) : tipos.map(tipo => (
+                      <tr key={tipo.id} className="hover:bg-[#2D3250]">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          #{tipo.id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {tipo.titulo}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {tipo.descricao}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => {
+                                setEditingTipo(tipo);
+                                setModalTipoOpen(true);
+                              }}
+                              className="text-blue-400 hover:text-blue-300"
+                              title="Editar"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => deleteTipo(tipo.id)}
+                              className="text-[#E31B23] hover:text-[#C5161D]"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -992,105 +1545,71 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB: relatórios */}
+        {/* Relatorios Tab */}
         {activeTab === 'relatorios' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-black">Relatórios</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow border">
-                <h3 className="font-semibold mb-3 text-black">Exportar Chamado específico</h3>
-                <ExportChamadoForm onExport={(id, type) => exportChamadoById(id, type)} chamados={chamados} />
-              </div>
-
-              <div className="bg-white p-6 rounded-xl shadow border">
-                <h3 className="font-semibold mb-3 text-black">Exportar por período</h3>
-                <div className="flex gap-3">
-                  <button onClick={() => exportChamadosRange('week','pdf')} className="bg-blue-600 text-white px-4 py-2 rounded">PDF - Última Semana</button>
-                  <button onClick={() => exportChamadosRange('week','excel')} className="bg-green-600 text-white px-4 py-2 rounded">Excel - Última Semana</button>
-                  <button onClick={() => exportChamadosRange('month','pdf')} className="bg-blue-600 text-white px-4 py-2 rounded">PDF - Mês</button>
-                  <button onClick={() => exportChamadosRange('month','excel')} className="bg-green-600 text-white px-4 py-2 rounded">Excel - Mês</button>
-                </div>
+            <h2 className="text-2xl font-bold">Relatórios</h2>
+            <div className="bg-[#1B1F3B] rounded-xl shadow-lg border border-[#FFFDF7]/10 p-6">
+              <h3 className="text-lg font-semibold mb-4">Exportar Chamado Individual</h3>
+              <ExportChamadoForm chamados={chamados} onExport={exportChamadoById} />
+              <h3 className="text-lg font-semibold mt-8 mb-4">Exportar Chamados por Período</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button 
+                  onClick={() => exportChamadosRange('week', 'pdf')} 
+                  className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200"
+                >
+                  Exportar Semana (PDF)
+                </button>
+                <button 
+                  onClick={() => exportChamadosRange('week', 'excel')} 
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
+                >
+                  Exportar Semana (Excel)
+                </button>
+                <button 
+                  onClick={() => exportChamadosRange('month', 'pdf')} 
+                  className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200"
+                >
+                  Exportar Mês (PDF)
+                </button>
+                <button 
+                  onClick={() => exportChamadosRange('month', 'excel')} 
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
+                >
+                  Exportar Mês (Excel)
+                </button>
               </div>
             </div>
           </div>
         )}
-
-        {/* Modais */}
-        <ChamadoModal
-          isOpen={modalChamadoOpen}
-          onClose={() => { setModalChamadoOpen(false); setEditingChamado(null); }}
-          onSubmit={async (data) => {
-            try {
-              if (editingChamado) await updateChamado(editingChamado.id, data);
-              else await createChamado(data);
-            } catch (err) { addToast('error','Erro', err.message); }
-          }}
-          initial={editingChamado}
-          tipos={equipamentos}
-          usuarios={usuarios}
-          loading={genericLoading}
-        />
-
-        <UsuarioModal
-          isOpen={modalUsuarioOpen}
-          onClose={() => { setModalUsuarioOpen(false); setEditingUsuario(null); }}
-          initial={editingUsuario}
-          isEditing={!!editingUsuario}
-          onSubmit={async (data) => {
-            try {
-              if (editingUsuario) await updateUsuario(editingUsuario.id, data);
-              else await createUsuario(data);
-            } catch (err) { addToast('error','Erro', err.message); }
-          }}
-          loading={genericLoading}
-        />
-
-        <EquipamentoModal
-          isOpen={modalEquipOpen}
-          onClose={() => { setModalEquipOpen(false); setEditingEquip(null); }}
-          initial={editingEquip}
-          onSubmit={async (data) => {
-            try {
-              if (editingEquip) await updateEquip(editingEquip.id, data);
-              else await createEquip(data);
-            } catch (err) { addToast('error','Erro', err.message); }
-          }}
-          loading={genericLoading}
-        />
-
-        {/* Toasts */}
-        <Toasts toasts={toasts} removeToast={removeToast} />
       </main>
+
+      <ChamadoModal 
+        isOpen={modalChamadoOpen}
+        onClose={() => setModalChamadoOpen(false)}
+        onSubmit={(data) => editingChamado ? updateChamado(editingChamado.id, data) : createChamado(data)}
+        initial={editingChamado}
+        tipos={tipos}
+        usuarios={usuarios}
+        tecnicos={tecnicos}
+        loading={genericLoading}
+      />
+      <UsuarioModal 
+        isOpen={modalUsuarioOpen}
+        onClose={() => setModalUsuarioOpen(false)}
+        onSubmit={(data) => editingUsuario ? updateUsuario(editingUsuario.id, data) : createUsuario(data)}
+        initial={editingUsuario}
+        isEditing={!!editingUsuario}
+        loading={genericLoading}
+      />
+      <TipoModal 
+        isOpen={modalTipoOpen}
+        onClose={() => setModalTipoOpen(false)}
+        onSubmit={(data) => editingTipo ? updateTipo(editingTipo.id, data) : createTipo(data)}
+        initial={editingTipo}
+        loading={genericLoading}
+      />
+      <Toasts toasts={toasts} removeToast={removeToast} />
     </div>
   );
-}
-
-/* ============================
-   Pequeno componente auxiliar
-   ExportChamadoForm (select id + botões)
-   ============================ */
-function ExportChamadoForm({ chamados, onExport }) {
-  const [selectedId, setSelectedId] = useState('');
-  const inputClass = "w-full bg-gray-50 border border-gray-200 text-black px-3 py-2 rounded";
-  return (
-    <div className="space-y-3">
-      <select className={inputClass} value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
-        <option value="">Selecione um Chamado (por ID)</option>
-        {chamados.map(c => <option key={c.id} value={c.id}>#{c.id} — {c.titulo}</option>)}
-      </select>
-
-      <div className="flex gap-2">
-        <button onClick={() => {
-          if (!selectedId) return alert('Escolha um chamado');
-          onExport(selectedId, 'pdf');
-        }} className="bg-blue-600 text-white px-4 py-2 rounded">PDF</button>
-
-        <button onClick={() => {
-          if (!selectedId) return alert('Escolha um chamado');
-          onExport(selectedId, 'excel');
-        }} className="bg-green-600 text-white px-4 py-2 rounded">Excel</button>
-      </div>
-    </div>
-  );
-}
+};
