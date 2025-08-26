@@ -192,30 +192,23 @@ export default function NovoChamado() {
           content="Registre chamados de manutenção para equipamentos escolares com agilidade e precisão."
         />
       </Head>
-
-      <div className="min-h-screen bg-[#FFFDF7] font-sans px-4 py-10">
-        <header className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7] py-8 sm:py-12 px-4 mb-8">
-          <div className="max-w-7xl mx-auto text-center flex flex-col items-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
-              Abrir Novo Chamado
-            </h1>
-            <div className="flex gap-4">
-              <button
-                onClick={() => window.history.back()}
-                className="text-[#FFFDF7] underline hover:text-[#E31B23] transition duration-300 text-sm sm:text-base"
-              >
-                Voltar para a Página Inicial
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-[#E31B23] hover:bg-[#C5161D] text-[#FFFDF7] px-4 py-2 rounded-lg font-medium transition duration-300"
-              >
-                Sair
-              </button>
-            </div>
+<div className="min-h-screen bg-[#FFFDF7] font-sans">
+      <header className="bg-gradient-to-b from-[#1B1F3B] to-[#2D3250] text-[#FFFDF7] py-8 sm:py-12 px-4">
+        <div className="max-w-7xl mx-auto text-center flex flex-col items-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+            Criar Chamados
+          </h1>
+          <p className="text-sm sm:text-base md:text-lg mb-6 sm:mb-8 max-w-3xl mx-auto text-[#FFFDF7]/90">
+           Crie o seu chamado para que possamos ajudar a resolver o seu problema de forma rápida e eficiente.
+          </p>
+          <div className="flex gap-4">
+  
           </div>
-        </header>
+        </div>
+      </header>
 
+<br></br>
+<br></br>
         <form
           onSubmit={handleSubmit}
           className="max-w-3xl mx-auto bg-[#2D3250] p-8 rounded-xl shadow-lg space-y-6 border-t-4 border-[#E31B23]"

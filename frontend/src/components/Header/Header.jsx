@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -145,32 +144,37 @@ export default function Navbar() {
             </button>
           </div>
 
-          <ul className="px-6 py-4 space-y-4">
-            <li
-              className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
-              onClick={() => handleNavigation('/home')}
-            >
-              Início
-            </li>
-            <li
-              className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
-              onClick={() => handleNavigation('/meus-chamados')}
-            >
-              Meus Chamados
-            </li>
-            <li
-              className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
-              onClick={() => handleNavigation('/novo-chamado')}
-            >
-              Criar Chamado
-            </li>
-            <li
-              className="text-lg text-black cursor-pointer hover:text-[#E31B23] transition-colors"
-              onClick={handleLogout}
-            >
-              Sair
-            </li>
-          </ul>
+          <div className="flex flex-col min-h-full px-6 py-4">
+            <ul className="space-y-4">
+              <li
+                className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
+                onClick={() => handleNavigation('/home')}
+              >
+                Início
+              </li>
+              <li
+                className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
+                onClick={() => handleNavigation('/meus-chamados')}
+              >
+                Meus Chamados
+              </li>
+              <li
+                className="text-lg text-black cursor-pointer hover:text-yellow-600 transition-colors"
+                onClick={() => handleNavigation('/novo-chamado')}
+              >
+                Criar Chamado
+              </li>
+            </ul>
+            {/* Botão Sair na parte inferior, grande e vermelho */}
+            <div className="mt-auto pb-40">
+              <button
+                className="text-2xl font-bold text-red-600 hover:text-red-800 transition-colors w-full text-left border-t pt-4 boeder-red-600"
+                onClick={handleLogout}
+              >
+                Sair
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </>
