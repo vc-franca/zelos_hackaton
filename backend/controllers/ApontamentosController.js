@@ -1,12 +1,9 @@
-import { listarApontamentos, obterApontamentoPorId, criarApontamento, atualizarApontamento, excluirApontamento } from '../models/Apontamentos.js';
-
-// import do banco de dados para verificação nas funções de criar e atualizar
 import { create, readAll, read, update, deleteRecord, pool } from '../config/database.js';
 
 /* --------------------------------- LISTAR --------------------------------- */
 const listarApontamentosController = async (req, res) => {
     try {
-        const apontamentos = await listarApontamentos();
+        const apontamentos = await readAll('apontamentos');
         res.json(apontamentos);
     } catch (err) {
         console.error('Erro ao listar apontamentos: ', err);
@@ -17,10 +14,10 @@ const listarApontamentosController = async (req, res) => {
 /* ------------------------------ OBTER POR ID ------------------------------ */
 const obterApontamentoPorIdController = async (req, res) => {
     try {
-        const apontamento = await obterApontamentoPorId(req.params.id);
+        const apontamento = await readAll('apontamentos', `id = ${req.params.id}`);
 
-        if (apontamento) {
-            res.json(apontamento);
+        if (apontamento && apontamento.length > 0) {
+            res.json(apontamento[0]);
         } else {
             res.status(404).json({ mensagem: 'Apontamento não encontrado' });
         }
@@ -45,12 +42,12 @@ const criarApontamentoController = async (req, res) => {
         }
 
         const apontamentoData = { chamado_id, tecnico_id, descricao, comeco, fim };
-        const apontamentoId = await criarApontamento(apontamentoData);
-        res.status(201).json({ mensagem: 'Apontamento criado com sucesso: ', apontamentoId });
+        const apontamentoId = await create('apontamentos', apontamentoData);
+        res.status(201).json({ mensagem: 'Apontamento criado com sucesso', id: apontamentoId });
     } catch (err) {
         console.error('Erro ao criar apontamento: ', err);
         res.status(500).json({
-            mensagem: 'Erro ao criar apontamento: ',
+            mensagem: 'Erro ao criar apontamento',
             err: {
                 message: err.message,
                 stack: err.stack,
@@ -75,8 +72,8 @@ const atualizarApontamentoController = async (req, res) => {
 
         const apontamentoData = { chamado_id, tecnico_id, descricao, comeco, fim };
 
-        await atualizarApontamento(apontamentoId, apontamentoData);
-        res.status(201).json({ mensagem: 'Apontamento atualizado com sucesso' });
+        await update('apontamentos', apontamentoData, `id = ${apontamentoId}`);
+        res.status(200).json({ mensagem: 'Apontamento atualizado com sucesso' });
     } catch (err) {
         console.error('Erro ao atualizar apontamento: ', err);
         res.status(500).json({ mensagem: 'Erro ao atualizar apontamento: ', err });
@@ -88,8 +85,8 @@ const excluirApontamentoController = async (req, res) => {
     try {
         const apontamentoId = req.params.id;
 
-        await excluirApontamento(apontamentoId);
-        res.status(201).json({ mensagem: 'Apontamento excluído com sucesso' });
+        await deleteRecord('apontamentos', `id = ${apontamentoId}`);
+        res.status(200).json({ mensagem: 'Apontamento excluído com sucesso' });
     } catch (err) {
         console.error('Erro ao excluir apontamento: ', err);
         res.status(500).json({ mensagem: 'Erro ao excluir apontamento: ', err });

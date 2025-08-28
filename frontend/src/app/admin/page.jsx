@@ -554,6 +554,184 @@ function TipoModal({ isOpen, onClose, onSubmit, initial = null, loading }) {
 }
 
 /* ============================
+   Apontamento Modal Component
+   ============================ */
+
+function ApontamentoModal({ isOpen, onClose, onSubmit, initial = null, chamados = [], tecnicos = [], loading }) {
+  const isEditing = !!initial;
+  const [form, setForm] = useState({
+    chamado_id: '',
+    tecnico_id: '',
+    descricao: '',
+    comeco: '',
+    fim: ''
+  });
+  const [formErrors, setFormErrors] = useState({});
+
+  useEffect(() => {
+    if (initial) {
+      setForm({
+        chamado_id: String(initial.chamado_id || ''),
+        tecnico_id: String(initial.tecnico_id || ''),
+        descricao: initial.descricao || '',
+        comeco: initial.comeco ? new Date(initial.comeco).toISOString().slice(0, 16) : '',
+        fim: initial.fim ? new Date(initial.fim).toISOString().slice(0, 16) : ''
+      });
+      setFormErrors({});
+    } else {
+      setForm({
+        chamado_id: '',
+        tecnico_id: '',
+        descricao: '',
+        comeco: '',
+        fim: ''
+      });
+      setFormErrors({});
+    }
+  }, [initial, isOpen]);
+
+  if (!isOpen) return null;
+
+  const validateForm = () => {
+    const errors = {};
+    if (!form.chamado_id) errors.chamado_id = 'Chamado é obrigatório';
+    if (!form.tecnico_id) errors.tecnico_id = 'Técnico é obrigatório';
+    if (!form.descricao) errors.descricao = 'Descrição é obrigatória';
+    if (!form.comeco) errors.comeco = 'Data de início é obrigatória';
+    if (!form.fim) errors.fim = 'Data de fim é obrigatória';
+    
+    if (form.comeco && form.fim && new Date(form.comeco) >= new Date(form.fim)) {
+      errors.fim = 'Data de fim deve ser posterior à data de início';
+    }
+    
+    return errors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    const data = {
+      ...form,
+      chamado_id: Number(form.chamado_id),
+      tecnico_id: Number(form.tecnico_id)
+    };
+
+    onSubmit(data);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-[#2D3250] rounded-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold mb-4 text-[#FFFDF7]">{isEditing ? 'Editar Apontamento' : 'Novo Apontamento'}</h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Chamado</label>
+              <select 
+                name="chamado_id"
+                value={form.chamado_id} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+              >
+                <option value="">Selecione o chamado</option>
+                {chamados.map(c => (
+                  <option key={c.id} value={c.id}>#{c.id} — {c.titulo}</option>
+                ))}
+              </select>
+              {formErrors.chamado_id && <p className="text-[#E31B23] text-xs mt-1">{formErrors.chamado_id}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Técnico</label>
+              <select 
+                name="tecnico_id"
+                value={form.tecnico_id} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+              >
+                <option value="">Selecione o técnico</option>
+                {tecnicos.map(t => (
+                  <option key={t.id} value={t.id}>{t.nome}</option>
+                ))}
+              </select>
+              {formErrors.tecnico_id && <p className="text-[#E31B23] text-xs mt-1">{formErrors.tecnico_id}</p>}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Descrição</label>
+            <textarea 
+              name="descricao"
+              value={form.descricao} 
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              rows={3}
+              placeholder="Descreva o trabalho realizado..."
+            />
+            {formErrors.descricao && <p className="text-[#E31B23] text-xs mt-1">{formErrors.descricao}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Data/Hora de Início</label>
+              <input 
+                type="datetime-local"
+                name="comeco"
+                value={form.comeco} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              />
+              {formErrors.comeco && <p className="text-[#E31B23] text-xs mt-1">{formErrors.comeco}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Data/Hora de Fim</label>
+              <input 
+                type="datetime-local"
+                name="fim"
+                value={form.fim} 
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              />
+              {formErrors.fim && <p className="text-[#E31B23] text-xs mt-1">{formErrors.fim}</p>}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg hover:bg-[#FFFDF7]/30 transition duration-200"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 disabled:opacity-50"
+            >
+              {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ============================
    Export Helper Component
    ============================ */
 
@@ -620,6 +798,7 @@ export default function AdminPage() {
   const [usuarios, setUsuarios] = useState([]);
   const [tecnicos, setTecnicos] = useState([]);
   const [tipos, setTipos] = useState([]);
+  const [apontamentos, setApontamentos] = useState([]);
 
   // UI states
   const [loading, setLoading] = useState(false);
@@ -629,11 +808,13 @@ export default function AdminPage() {
   const [modalChamadoOpen, setModalChamadoOpen] = useState(false);
   const [modalUsuarioOpen, setModalUsuarioOpen] = useState(false);
   const [modalTipoOpen, setModalTipoOpen] = useState(false);
+  const [modalApontamentoOpen, setModalApontamentoOpen] = useState(false);
 
   // Editing states
   const [editingChamado, setEditingChamado] = useState(null);
   const [editingUsuario, setEditingUsuario] = useState(null);
   const [editingTipo, setEditingTipo] = useState(null);
+  const [editingApontamento, setEditingApontamento] = useState(null);
 
   // Search states
   const [searchTerm, setSearchTerm] = useState('');
@@ -697,22 +878,25 @@ export default function AdminPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [chamadosRes, usuariosRes, tiposRes] = await Promise.all([
+        const [chamadosRes, usuariosRes, tiposRes, apontamentosRes] = await Promise.all([
           fetch('http://localhost:8080/chamados'),
           fetch('http://localhost:8080/usuarios'),
-          fetch('http://localhost:8080/pool')
+          fetch('http://localhost:8080/pool'),
+          fetch('http://localhost:8080/apontamentos')
         ]);
 
-        const [chamadosData, usuariosData, tiposData] = await Promise.all([
+        const [chamadosData, usuariosData, tiposData, apontamentosData] = await Promise.all([
           chamadosRes.json(),
           usuariosRes.json(),
-          tiposRes.json()
+          tiposRes.json(),
+          apontamentosRes.json()
         ]);
 
         setChamados(chamadosData);
         setUsuarios(usuariosData);
         setTecnicos(usuariosData.filter(u => u.funcao === 'tecnico'));
         setTipos(tiposData);
+        setApontamentos(apontamentosData);
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
         addToast('error', 'Erro', 'Falha ao carregar dados');
@@ -771,10 +955,11 @@ export default function AdminPage() {
       await fetch('http://localhost:8080/chamados', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
       
-      const updatedChamados = await fetch('http://localhost:8080/chamados').then(res => res.json());
+      const updatedChamados = await fetch('http://localhost:8080/chamados', { credentials: 'include' }).then(res => res.json());
       setChamados(updatedChamados);
       
       setModalChamadoOpen(false);
@@ -793,10 +978,11 @@ export default function AdminPage() {
       await fetch(`http://localhost:8080/chamados/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
       
-      const updatedChamados = await fetch('http://localhost:8080/chamados').then(res => res.json());
+      const updatedChamados = await fetch('http://localhost:8080/chamados', { credentials: 'include' }).then(res => res.json());
       setChamados(updatedChamados);
       
       setModalChamadoOpen(false);
@@ -813,7 +999,10 @@ export default function AdminPage() {
     if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
     
     try {
-      await fetch(`http://localhost:8080/chamados/${id}`, { method: 'DELETE' });
+      await fetch(`http://localhost:8080/chamados/${id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      });
       setChamados(prev => prev.filter(c => c.id !== id));
       addToast('success', 'Sucesso', 'Chamado excluído com sucesso');
     } catch (err) {
@@ -826,6 +1015,7 @@ export default function AdminPage() {
       await fetch(`http://localhost:8080/chamados/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ estado: newStatus })
       });
       setChamados(prev => prev.map(c => c.id === id ? { ...c, estado: newStatus } : c));
@@ -845,10 +1035,11 @@ export default function AdminPage() {
       await fetch('http://localhost:8080/usuarios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
       
-      const updatedUsuarios = await fetch('http://localhost:8080/usuarios').then(res => res.json());
+      const updatedUsuarios = await fetch('http://localhost:8080/usuarios', { credentials: 'include' }).then(res => res.json());
       setUsuarios(updatedUsuarios);
       setTecnicos(updatedUsuarios.filter(u => u.funcao === 'tecnico'));
       
@@ -868,10 +1059,11 @@ export default function AdminPage() {
       await fetch(`http://localhost:8080/usuarios/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
       
-      const updatedUsuarios = await fetch('http://localhost:8080/usuarios').then(res => res.json());
+      const updatedUsuarios = await fetch('http://localhost:8080/usuarios', { credentials: 'include' }).then(res => res.json());
       setUsuarios(updatedUsuarios);
       setTecnicos(updatedUsuarios.filter(u => u.funcao === 'tecnico'));
       
@@ -889,7 +1081,10 @@ export default function AdminPage() {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
     
     try {
-      await fetch(`http://localhost:8080/usuarios/${id}`, { method: 'DELETE' });
+      await fetch(`http://localhost:8080/usuarios/${id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      });
       setUsuarios(prev => prev.filter(u => u.id !== id));
       setTecnicos(prev => prev.filter(u => u.id !== id));
       addToast('success', 'Sucesso', 'Usuário excluído com sucesso');
@@ -908,10 +1103,11 @@ export default function AdminPage() {
       await fetch('http://localhost:8080/pool', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
       
-      const updatedTipos = await fetch('http://localhost:8080/pool').then(res => res.json());
+      const updatedTipos = await fetch('http://localhost:8080/pool', { credentials: 'include' }).then(res => res.json());
       setTipos(updatedTipos);
       
       setModalTipoOpen(false);
@@ -930,10 +1126,11 @@ export default function AdminPage() {
       await fetch(`http://localhost:8080/pool/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
       
-      const updatedTipos = await fetch('http://localhost:8080/pool').then(res => res.json());
+      const updatedTipos = await fetch('http://localhost:8080/pool', { credentials: 'include' }).then(res => res.json());
       setTipos(updatedTipos);
       
       setModalTipoOpen(false);
@@ -950,11 +1147,79 @@ export default function AdminPage() {
     if (!confirm('Tem certeza que deseja excluir este tipo de serviço?')) return;
     
     try {
-      await fetch(`http://localhost:8080/pool/${id}`, { method: 'DELETE' });
+      await fetch(`http://localhost:8080/pool/${id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      });
       setTipos(prev => prev.filter(e => e.id !== id));
       addToast('success', 'Sucesso', 'Tipo de serviço excluído com sucesso');
     } catch (err) {
       addToast('error', 'Erro ao excluir tipo', err.message);
+    }
+  };
+
+  /* ============================
+     CRUD Operations - Apontamentos
+     ============================ */
+
+  const createApontamento = async (payload) => {
+    try {
+      setGenericLoading(true);
+      await fetch('http://localhost:8080/apontamentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      
+      const updatedApontamentos = await fetch('http://localhost:8080/apontamentos', { credentials: 'include' }).then(res => res.json());
+      setApontamentos(updatedApontamentos);
+      
+      setModalApontamentoOpen(false);
+      setEditingApontamento(null);
+      addToast('success', 'Sucesso', 'Apontamento criado com sucesso');
+    } catch (err) {
+      addToast('error', 'Erro ao criar apontamento', err.message);
+    } finally {
+      setGenericLoading(false);
+    }
+  };
+
+  const updateApontamento = async (id, payload) => {
+    try {
+      setGenericLoading(true);
+      await fetch(`http://localhost:8080/apontamentos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      
+      const updatedApontamentos = await fetch('http://localhost:8080/apontamentos', { credentials: 'include' }).then(res => res.json());
+      setApontamentos(updatedApontamentos);
+      
+      setModalApontamentoOpen(false);
+      setEditingApontamento(null);
+      addToast('success', 'Sucesso', 'Apontamento atualizado com sucesso');
+    } catch (err) {
+      addToast('error', 'Erro ao atualizar apontamento', err.message);
+    } finally {
+      setGenericLoading(false);
+    }
+  };
+
+  const deleteApontamento = async (id) => {
+    if (!confirm('Tem certeza que deseja excluir este apontamento?')) return;
+    
+    try {
+      await fetch(`http://localhost:8080/apontamentos/${id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      setApontamentos(prev => prev.filter(a => a.id !== id));
+      addToast('success', 'Sucesso', 'Apontamento excluído com sucesso');
+    } catch (err) {
+      addToast('error', 'Erro ao excluir apontamento', err.message);
     }
   };
 
@@ -1141,6 +1406,7 @@ export default function AdminPage() {
             { id: 'chamados', label: 'Chamados', icon: Ticket },
             { id: 'usuarios', label: 'Usuários', icon: Users },
             { id: 'tipos', label: 'Tipos de Serviço', icon: Settings },
+            { id: 'apontamentos', label: 'Apontamentos', icon: Clock },
             { id: 'relatorios', label: 'Relatórios', icon: Activity }
           ].map(tab => {
             const Icon = tab.icon;
@@ -1545,6 +1811,96 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Apontamentos Tab */}
+        {activeTab === 'apontamentos' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Gerenciar Apontamentos</h2>
+              <button 
+                onClick={() => {
+                  setEditingApontamento(null);
+                  setModalApontamentoOpen(true);
+                }}
+                className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 flex items-center space-x-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Novo Apontamento</span>
+              </button>
+            </div>
+
+            <div className="bg-[#1B1F3B] rounded-xl shadow-lg border border-[#FFFDF7]/10">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#2D3250]">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Chamado</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Técnico</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Descrição</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Início</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Fim</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#FFFDF7]/10">
+                    {apontamentos.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-8 text-center text-[#FFFDF7]/70">
+                          Nenhum apontamento encontrado
+                        </td>
+                      </tr>
+                    ) : apontamentos.map(apontamento => (
+                      <tr key={apontamento.id} className="hover:bg-[#2D3250]">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          #{apontamento.id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          #{apontamento.chamado_id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {getUserName(apontamento.tecnico_id)}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="max-w-xs truncate" title={apontamento.descricao}>
+                            {apontamento.descricao}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {formatDate(apontamento.comeco)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {formatDate(apontamento.fim)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => {
+                                setEditingApontamento(apontamento);
+                                setModalApontamentoOpen(true);
+                              }}
+                              className="text-blue-400 hover:text-blue-300"
+                              title="Editar"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => deleteApontamento(apontamento.id)}
+                              className="text-[#E31B23] hover:text-[#C5161D]"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Relatorios Tab */}
         {activeTab === 'relatorios' && (
           <div className="space-y-6">
@@ -1607,6 +1963,15 @@ export default function AdminPage() {
         onClose={() => setModalTipoOpen(false)}
         onSubmit={(data) => editingTipo ? updateTipo(editingTipo.id, data) : createTipo(data)}
         initial={editingTipo}
+        loading={genericLoading}
+      />
+      <ApontamentoModal 
+        isOpen={modalApontamentoOpen}
+        onClose={() => setModalApontamentoOpen(false)}
+        onSubmit={(data) => editingApontamento ? updateApontamento(editingApontamento.id, data) : createApontamento(data)}
+        initial={editingApontamento}
+        chamados={chamados}
+        tecnicos={tecnicos}
         loading={genericLoading}
       />
       <Toasts toasts={toasts} removeToast={removeToast} />

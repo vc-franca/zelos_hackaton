@@ -5,12 +5,22 @@ import * as THREE from 'three';
 import GLOBE from 'vanta/dist/vanta.globe.min';
 import axios from 'axios';
 
+// Credenciais de teste disponíveis no banco:
+// alice@teste.com / password (Administrador)
+// bruno@teste.com / password (Técnico)
+// carla@teste.com / password (Técnico)
+// daniela@teste.com / password (Usuário)
+// eduardo@teste.com / password (Usuário)
+
 export default function LoginPage() {
   const vantaRef = useRef(null);
   const vantaEffect = useRef(null);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [isLoading, setIsLoading] = useState(false); // Estado para controlar o loading
+  const [error, setError] = useState(''); // Estado para mensagens de erro
+  const [emailError, setEmailError] = useState(''); // Erro específico do email
+  const [senhaError, setSenhaError] = useState(''); // Erro específico da senha
 
   useEffect(() => {
     if (!vantaEffect.current) {
@@ -33,18 +43,44 @@ export default function LoginPage() {
     };
   }, []);
 
+  const validateForm = () => {
+    setEmailError('');
+    setSenhaError('');
+    setError('');
+    
+    let isValid = true;
+    
+    if (!email.trim()) {
+      setEmailError('Email é obrigatório');
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError('Email inválido');
+      isValid = false;
+    }
+    
+    if (!senha.trim()) {
+      setSenhaError('Senha é obrigatória');
+      isValid = false;
+    }
+    
+    return isValid;
+  };
+
   const handleLogin = async () => {
-    setIsLoading(true); // Ativa o loading
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    setError('');
+    
     try {
       const { data } = await axios.post(
         'http://localhost:8080/auth/login',
-        { email, senha },
+        { email: email.trim(), senha },
         { withCredentials: true }
       );
 
       if (!data.user) {
-        alert('Erro: usuário não retornado do backend');
-        setIsLoading(false);
+        setError('Erro: usuário não retornado do backend');
         return;
       }
 
@@ -59,9 +95,26 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error('Erro no login:', error.response?.data || error.message);
-      alert('Email ou senha inválidos');
+      
+      if (error.response?.status === 404) {
+        setError('Usuário não encontrado');
+      } else if (error.response?.status === 401) {
+        setError('Senha incorreta');
+      } else if (error.response?.status === 500) {
+        setError('Erro interno do servidor');
+      } else if (error.code === 'ERR_NETWORK') {
+        setError('Erro de conexão. Verifique se o servidor está rodando.');
+      } else {
+        setError('Erro ao fazer login. Tente novamente.');
+      }
     } finally {
-      setIsLoading(false); // Desativa o loading
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin();
     }
   };
 
@@ -133,11 +186,21 @@ export default function LoginPage() {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all duration-300"
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setEmailError('');
+                        setError('');
+                      }}
+                      onKeyPress={handleKeyPress}
+                      className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all duration-300 ${
+                        emailError ? 'border-red-400' : 'border-white/20'
+                      }`}
                       placeholder="seu.email@instituicao.com"
-                      disabled={isLoading} // Desativa input durante loading
+                      disabled={isLoading}
                     />
+                    {emailError && (
+                      <p className="text-red-400 text-sm mt-1">{emailError}</p>
+                    )}
                   </div>
 
                   {/* Password Field */}
@@ -153,12 +216,29 @@ export default function LoginPage() {
                     <input
                       type="password"
                       value={senha}
-                      onChange={(e) => setSenha(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all duration-300"
+                      onChange={(e) => {
+                        setSenha(e.target.value);
+                        setSenhaError('');
+                        setError('');
+                      }}
+                      onKeyPress={handleKeyPress}
+                      className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-transparent transition-all duration-300 ${
+                        senhaError ? 'border-red-400' : 'border-white/20'
+                      }`}
                       placeholder="••••••••"
-                      disabled={isLoading} // Desativa input durante loading
+                      disabled={isLoading}
                     />
+                    {senhaError && (
+                      <p className="text-red-400 text-sm mt-1">{senhaError}</p>
+                    )}
                   </div>
+
+                  {/* Error Message */}
+                  {error && (
+                    <div className="bg-red-500/20 border border-red-400/50 rounded-lg p-3">
+                      <p className="text-red-400 text-sm text-center">{error}</p>
+                    </div>
+                  )}
 
                   {/* Login Button */}
                   <button
@@ -167,9 +247,16 @@ export default function LoginPage() {
                     style={{
                       background: 'linear-gradient(to bottom, #FF0000, #3c3c3c)',
                     }}
-                    disabled={isLoading} // Desativa botão durante loading
+                    disabled={isLoading}
                   >
-                    {isLoading ? 'Entrando...' : 'Entrar'}
+                    {isLoading ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Entrando...</span>
+                      </div>
+                    ) : (
+                      'Entrar'
+                    )}
                   </button>
 
                   {/* Forgot Password */}

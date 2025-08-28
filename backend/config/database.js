@@ -1,11 +1,13 @@
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
+import { DB_CONFIG } from './secrets.js';
 
 const pool = mysql.createPool({
-    host: '127.0.0.1',
-    user: 'root',
-    password: '',
-    database: 'zelos', 
+    host: DB_CONFIG.host,
+    user: DB_CONFIG.user,
+    password: DB_CONFIG.password,
+    database: DB_CONFIG.database, 
+    port: DB_CONFIG.port,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -58,17 +60,25 @@ async function create(table, data) {
     // Obtém uma conexão com o banco de dados
     const connection = await getConnection();
     try {
-        // Obtém as chaves do objeto 'data' e as junta em uma string separada por vírgulas
-        const columns = Object.keys(data).join(', ');
+        // Filtra apenas os campos que têm valores válidos (não undefined/null)
+        const filteredData = {};
+        Object.keys(data).forEach(key => {
+            if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
+                filteredData[key] = data[key];
+            }
+        });
+
+        // Obtém as chaves do objeto filtrado e as junta em uma string separada por vírgulas
+        const columns = Object.keys(filteredData).join(', ');
 
         // Cria um array de placeholders "?" com o mesmo número de colunas e o transforma em uma string
-        const placeholders = Array(Object.keys(data).length).fill('?').join(', ');
+        const placeholders = Array(Object.keys(filteredData).length).fill('?').join(', ');
 
         // Monta a query SQL para inserção dos dados na tabela especificada
         const sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
 
-        // Obtém os valores do objeto 'data' para serem usados na query
-        const values = Object.values(data);
+        // Obtém os valores do objeto filtrado para serem usados na query
+        const values = Object.values(filteredData);
 
         // Executa a query SQL com os valores fornecidos e armazena o resultado
         const [result] = await connection.execute(sql, values);
@@ -85,12 +95,20 @@ async function create(table, data) {
 async function update(table, data, where) {
     const connection = await getConnection();
     try {
-        const set = Object.keys(data)
+        // Filtra apenas os campos que têm valores válidos (não undefined/null)
+        const filteredData = {};
+        Object.keys(data).forEach(key => {
+            if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
+                filteredData[key] = data[key];
+            }
+        });
+
+        const set = Object.keys(filteredData)
             .map(column => `${column} = ?`)
             .join(', ');
 
         const sql = `UPDATE ${table} SET ${set} WHERE ${where}`;
-        const values = Object.values(data);
+        const values = Object.values(filteredData);
 
         const [result] = await connection.execute(sql, [...values]);
         return result.affectedRows;

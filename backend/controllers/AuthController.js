@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { read, compare } from '../config/database.js';
+import { readAll } from '../config/database.js';
+import bcrypt from 'bcryptjs';
 import { JWT_SECRET } from '../config/jwt.js'; // Importar a chave secreta
 
 
@@ -9,28 +10,29 @@ const loginController = async (req, res) => {
 
   try {
     // Verificar se o usuário existe no banco de dados
-    const usuario = await read('usuarios', `email = '${email}'`);
+    const usuarios = await readAll('usuarios', `email = '${email}'`);
+    const usuario = usuarios[0];
 
     if (!usuario) {
       return res.status(404).json({ mensagem: 'Usuário não encontrado' });
     }
 
     // Verificar se a senha está correta (comparar a senha enviada com o hash armazenado)
-    const senhaCorreta = await compare(senha, usuario.senha);
+    const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
 
     if (!senhaCorreta) {
       return res.status(401).json({ mensagem: 'Senha incorreta' });
     }
 
     // Gerar o token JWT
-    const token = jwt.sign({ id: usuario.id, funcao: usuario.funcao }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: usuario.id, funcao: usuario.funcao }, JWT_SECRET, { expiresIn: '24h' });
 
     // 4. Salva no cookie (HTTP-only)
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3600000,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000, // 24 horas
     });
 
     res.status(200).json({
@@ -53,8 +55,8 @@ const logoutController = (req, res) => {
   // Remove o cookie onde o token foi armazenado
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
+    secure: false,
+    sameSite: 'lax'
   });
 
   return res.json({ mensagem: 'Logout realizado com sucesso' });
@@ -71,7 +73,7 @@ const checkAuthController = (req, res) => {
 
   try {
     // verifica e decodifica o token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     return res.json({
       authenticated: true,

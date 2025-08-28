@@ -76,11 +76,11 @@ CREATE INDEX idx_apontamentos_comeco_fim ON apontamentos(comeco, fim);
 
 -- Inserts para testes
 INSERT INTO usuarios (nome, senha, email, funcao, estado) VALUES 
-    ('Alice Silva',   'senha123', 'alice@teste.com',   'administrador', 'ativo'),
-    ('Bruno Costa',   'senha123', 'bruno@teste.com',   'tecnico',       'ativo'),
-    ('Carla Dias',    'senha123', 'carla@teste.com',   'tecnico',       'ativo'),
-    ('Daniela Lima',  'senha123', 'daniela@teste.com', 'usuario',       'ativo'),
-    ('Eduardo Nunes', 'senha123', 'eduardo@teste.com', 'usuario',       'ativo');
+    ('Alice Silva',   '$2b$10$ZeDWeGpvJSQ9SuJz.MO0aeVPJTHgclk0UYH/xuPEpvaYB3i2sct4W', 'alice@teste.com',   'administrador', 'ativo'),
+    ('Bruno Costa',   '$2b$10$ZeDWeGpvJSQ9SuJz.MO0aeVPJTHgclk0UYH/xuPEpvaYB3i2sct4W', 'bruno@teste.com',   'tecnico',       'ativo'),
+    ('Carla Dias',    '$2b$10$ZeDWeGpvJSQ9SuJz.MO0aeVPJTHgclk0UYH/xuPEpvaYB3i2sct4W', 'carla@teste.com',   'tecnico',       'ativo'),
+    ('Daniela Lima',  '$2b$10$ZeDWeGpvJSQ9SuJz.MO0aeVPJTHgclk0UYH/xuPEpvaYB3i2sct4W', 'daniela@teste.com', 'usuario',       'ativo'),
+    ('Eduardo Nunes', '$2b$10$ZeDWeGpvJSQ9SuJz.MO0aeVPJTHgclk0UYH/xuPEpvaYB3i2sct4W', 'eduardo@teste.com', 'usuario',       'ativo');
 
 -- Pool (tipos de chamados)
 INSERT INTO pool (titulo, descricao, created_by, updated_by) VALUES

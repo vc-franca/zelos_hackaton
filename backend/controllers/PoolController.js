@@ -1,12 +1,9 @@
-import { listarPool, obterPoolPorId, criarPool, atualizarPool, excluirPool } from '../models/Pool.js';
-
-// import do banco de dados para verificação nas funções de criar e atualizar
 import { create, readAll, read, update, deleteRecord, pool } from '../config/database.js';
 
 /* --------------------------------- LISTAR --------------------------------- */
 const listarPoolController = async (req, res) => {
     try {
-        const pools = await listarPool();
+        const pools = await readAll('pool');
         res.json(pools);
     } catch (err) {
         console.error('Erro ao listar pools: ', err);
@@ -17,10 +14,10 @@ const listarPoolController = async (req, res) => {
 /* ------------------------------ OBTER POR ID ------------------------------ */
 const obterPoolPorIdController = async (req, res) => {
     try {
-        const pool = await obterPoolPorId(req.params.id);
+        const pool = await readAll('pool', `id = ${req.params.id}`);
 
-        if (pool) {
-            res.json(pool);
+        if (pool && pool.length > 0) {
+            res.json(pool[0]);
         } else {
             res.status(404).json({ mensagem: 'Pool não encontrado' });
         }
@@ -45,11 +42,11 @@ const criarPoolController = async (req, res) => {
         }
 
         const poolData = { titulo, descricao, created_by, updated_by };
-        const poolId = await criarPool(poolData);
-        res.status(201).json({ mensagem: 'Pool criado com sucesso: ', poolId });
+        const poolId = await create('pool', poolData);
+        res.status(201).json({ mensagem: 'Pool criado com sucesso', id: poolId });
     } catch (err) {
         console.error('Erro ao criar pool: ', err);
-        res.status(500).json({ mensagem: 'Erro ao criar pool: ', err });
+        res.status(500).json({ mensagem: 'Erro ao criar pool', err });
     }
 };
 
@@ -69,11 +66,11 @@ const atualizarPoolController = async (req, res) => {
 
         const poolData = { titulo, descricao, created_by, updated_by };
 
-        await atualizarPool(poolId, poolData);
-        res.status(201).json({ mensagem: 'Pool atualizado com sucesso' });
+        await update('pool', poolData, `id = ${poolId}`);
+        res.status(200).json({ mensagem: 'Pool atualizado com sucesso' });
     } catch (err) {
         console.error('Erro ao atualizar pool: ', err);
-        res.status(500).json({ mensagem: 'Erro ao atualizar pool: ', err });
+        res.status(500).json({ mensagem: 'Erro ao atualizar pool', err });
     }
 };
 
@@ -82,8 +79,24 @@ const excluirPoolController = async (req, res) => {
     try {
         const poolId = req.params.id;
 
-        await excluirPool(poolId);
-        res.status(201).json({ mensagem: 'Pool excluído com sucesso' });
+        // Primeiro, excluir todos os registros relacionados
+        try {
+            // Excluir registros de pool_tecnico
+            await pool.query('DELETE FROM pool_tecnico WHERE id_pool = ?', [poolId]);
+            console.log(`Registros de pool_tecnico relacionados ao pool ${poolId} foram excluídos`);
+            
+            // Atualizar chamados onde o tipo_id é este pool
+            await pool.query('UPDATE chamados SET tipo_id = NULL WHERE tipo_id = ?', [poolId]);
+            console.log(`Chamados relacionados ao pool ${poolId} foram atualizados`);
+            
+        } catch (relacionadoErr) {
+            console.error('Erro ao excluir registros relacionados:', relacionadoErr);
+            // Continua mesmo se houver erro ao excluir registros relacionados
+        }
+
+        // Agora excluir o pool
+        await deleteRecord('pool', `id = ${poolId}`);
+        res.status(200).json({ mensagem: 'Pool excluído com sucesso' });
 
     } catch (err) {
         console.error('Erro ao excluir pool: ', err);

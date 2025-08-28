@@ -7,7 +7,7 @@ import { create, readAll, read, update, deleteRecord, pool } from '../config/dat
 /* --------------------------------- LISTAR --------------------------------- */
 const listarUsuariosController = async (req, res) => {
     try {
-        const usuarios = await listarUsers();
+        const usuarios = await readAll('usuarios');
         res.json(usuarios);
     } catch (err) {
         console.error('Erro ao listar usuários: ', err);
@@ -76,8 +76,29 @@ const excluirUsuarioController = async (req, res) => {
     try {
         const usuarioId = req.params.id;
 
+        // Primeiro, excluir todos os registros relacionados
+        try {
+            // Excluir apontamentos onde o usuário é técnico
+            await pool.query('DELETE FROM apontamentos WHERE tecnico_id = ?', [usuarioId]);
+            console.log(`Apontamentos relacionados ao usuário ${usuarioId} foram excluídos`);
+            
+            // Excluir registros de pool_tecnico
+            await pool.query('DELETE FROM pool_tecnico WHERE id_tecnico = ?', [usuarioId]);
+            console.log(`Registros de pool_tecnico relacionados ao usuário ${usuarioId} foram excluídos`);
+            
+            // Atualizar chamados onde o usuário é solicitante ou técnico
+            await pool.query('UPDATE chamados SET usuario_id = NULL WHERE usuario_id = ?', [usuarioId]);
+            await pool.query('UPDATE chamados SET tecnico_id = NULL WHERE tecnico_id = ?', [usuarioId]);
+            console.log(`Chamados relacionados ao usuário ${usuarioId} foram atualizados`);
+            
+        } catch (relacionadoErr) {
+            console.error('Erro ao excluir registros relacionados:', relacionadoErr);
+            // Continua mesmo se houver erro ao excluir registros relacionados
+        }
+
+        // Agora excluir o usuário
         await excluirUser(usuarioId);
-        res.status(201).json({ mensagem: 'Usuário excluído com sucesso' });
+        res.status(200).json({ mensagem: 'Usuário excluído com sucesso' });
 
     } catch (err) {
         console.error('Erro ao excluir usuário: ', err);
