@@ -1,7 +1,10 @@
 // Arquivo de configuração para chaves secretas
 // Em produção, estas chaves devem estar em variáveis de ambiente
+import dotenv from 'dotenv';
 
-export const JWT_SECRET = 'zelos_hackaton_2024_super_secret_key_jwt_token_authentication';
+dotenv.config();
+
+export const JWT_SECRET = process.env.JWT_SECRET;
 export const SESSION_SECRET = 'zelos_hackaton_session_secret_2024';
 export const COOKIE_SECRET = 'zelos_hackaton_cookie_secret_2024';
 

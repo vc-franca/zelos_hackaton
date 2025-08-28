@@ -25,8 +25,6 @@ async function generateHash(label, password) {
 
 async function generateHashedPasswords() {
   try {
-    await generateHash("ADMIN", process.env.SENHA_ADMIN);
-    await generateHash("USER", process.env.SENHA_USER);
     await generateHash("TESTE", "senha123");
 
     process.exit(0); // finaliza

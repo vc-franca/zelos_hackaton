@@ -2,6 +2,9 @@ import jwt from 'jsonwebtoken';
 import { readAll } from '../config/database.js';
 import bcrypt from 'bcryptjs';
 import { JWT_SECRET } from '../config/jwt.js'; // Importar a chave secreta
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 
 /* ---------------------------------- LOGIN --------------------------------- */
@@ -30,8 +33,8 @@ const loginController = async (req, res) => {
     // 4. Salva no cookie (HTTP-only)
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV == 'production' ? 'strict' : 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 horas
     });
 
