@@ -1388,12 +1388,7 @@ export default function AdminPage() {
             <span>
               Bem-vindo, <span className="font-semibold">{currentUser?.nome || 'Admin'}</span>
             </span>
-            <button 
-              onClick={handleLogout}
-              className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200"
-            >
-              Sair
-            </button>
+          
           </div>
         </div>
       </header>
@@ -1740,16 +1735,7 @@ export default function AdminPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Gerenciar Tipos de Serviço</h2>
-              <button 
-                onClick={() => {
-                  setEditingTipo(null);
-                  setModalTipoOpen(true);
-                }}
-                className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 flex items-center space-x-2"
-              >
-                <Plus className="w-5 h-5" />
-                <span>Novo Tipo</span>
-              </button>
+      
             </div>
 
             <div className="bg-[#1B1F3B] rounded-xl shadow-lg border border-[#FFFDF7]/10">
