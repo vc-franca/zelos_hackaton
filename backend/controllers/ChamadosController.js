@@ -41,6 +41,11 @@ const criarChamadoController = async (req, res) => {
         // verificações necessárias
         const [poolExiste] = await pool.query('SELECT id FROM pool WHERE id = ?', [tipo_id]);
         const [usuarioExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND (funcao = ? OR funcao = ?)', [usuario_id, 'usuario', 'administrador']);
+        const [patrimonioETipoIgual] = await pool.query('SELECT id FROM chamados WHERE patrimonio = ? AND tipo_id = ?', [patrimonio, tipo_id]);
+
+        if (patrimonioETipoIgual) {
+            return res.status(400).json({ mensagem: 'Não é possível registrar dois chamados com o mesmo número de patrimônio e tipo de serviço' });
+        }
 
         if (!poolExiste.length) {
             return res.status(404).json({ mensagem: 'Tipo de serviço não encontrado' });
