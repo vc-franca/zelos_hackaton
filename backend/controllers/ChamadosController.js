@@ -41,6 +41,11 @@ const criarChamadoController = async (req, res) => {
         // verificações necessárias
         const [poolExiste] = await pool.query('SELECT id FROM pool WHERE id = ?', [tipo_id]);
         const [usuarioExiste] = await pool.query('SELECT id FROM usuarios WHERE id = ? AND (funcao = ? OR funcao = ?)', [usuario_id, 'usuario', 'administrador']);
+        const [chamadoExiste] = await pool.query('SELECT id FROM chamados WHERE patrimonio = ? AND tipo_id = ?', [patrimonio, tipo_id]);
+
+        if (chamadoExiste.length) {
+            return res.status(400).json({ mensagem: 'Já existe um chamado com este nº de patrimônio para este tipo de serviço' });
+        }
 
         if (!poolExiste.length) {
             return res.status(404).json({ mensagem: 'Tipo de serviço não encontrado' });
@@ -63,20 +68,20 @@ const criarChamadoController = async (req, res) => {
         if (patrimonioStr.length !== 7) {
             return res.status(400).json({ mensagem: 'O nº de patrimônio precisa ter 7 dígitos' });
         }
- 
+
         const chamadoData = { titulo, patrimonio, descricao, tipo_id, tecnico_id, usuario_id, estado }
 
         const chamadoId = await criarChamado(chamadoData);
         res.status(201).json({ mensagem: 'Chamado criado com sucesso', id: chamadoId })
     } catch (err) {
         console.error('Erro ao criar chamado: ', err);
-        res.status(500).json({ 
-            mensagem: 'Erro ao criar chamado', 
+        res.status(500).json({
+            mensagem: 'Erro ao criar chamado',
             err: {
                 message: err.message,
                 stack: err.stack,
             }
-         });
+        });
     }
 };
 
