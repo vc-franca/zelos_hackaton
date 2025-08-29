@@ -320,10 +320,14 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
 
   const validateForm = () => {
     const errors = {};
-    if (!form.nome) errors.nome = 'Nome é obrigatório';
-    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      errors.email = 'Email válido é obrigatório';
+    if (!isEditing) {
+      // Apenas valida nome e email se não estiver editando
+      if (!form.nome) errors.nome = 'Nome é obrigatório';
+      if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+        errors.email = 'Email válido é obrigatório';
+      }
     }
+    // Sempre valida a senha se for nova ou se estiver editando e a senha foi preenchida
     if (!isEditing && !form.senha) {
       errors.senha = 'Senha é obrigatória para novos usuários';
     } else if (form.senha && form.senha.length < 6) {
@@ -341,8 +345,15 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
     }
 
     const data = { ...form };
-    if (isEditing && !data.senha) {
-      delete data.senha;
+    if (isEditing) {
+      // No modo de edição, envia apenas a senha (se preenchida) e o estado (caso queira permitir mudar o estado)
+      // Remove nome, email e função para não atualizar
+      delete data.nome;
+      delete data.email;
+      delete data.funcao;
+      if (!data.senha) {
+        delete data.senha;
+      }
     }
 
     onSubmit(data);
@@ -357,7 +368,7 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-[#2D3250] rounded-xl w-full max-w-md p-6">
-        <h2 className="text-xl font-bold mb-4 text-[#FFFDF7]">{isEditing ? 'Editar Usuário' : 'Novo Usuário'}</h2>
+        <h2 className="text-xl font-bold mb-4 text-[#FFFDF7]">{isEditing ? 'Alterar Senha do Usuário' : 'Novo Usuário'}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -367,6 +378,8 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
               value={form.nome} 
               onChange={handleChange}
               className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              disabled={isEditing} // Desabilita no modo edição
+              readOnly={isEditing} // Torna somente leitura
             />
             {formErrors.nome && <p className="text-[#E31B23] text-xs mt-1">{formErrors.nome}</p>}
           </div>
@@ -379,6 +392,8 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
               value={form.email} 
               onChange={handleChange}
               className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              disabled={isEditing} // Desabilita no modo edição
+              readOnly={isEditing} // Torna somente leitura
             />
             {formErrors.email && <p className="text-[#E31B23] text-xs mt-1">{formErrors.email}</p>}
           </div>
@@ -398,34 +413,36 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
             {formErrors.senha && <p className="text-[#E31B23] text-xs mt-1">{formErrors.senha}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Função</label>
-              <select 
-                name="funcao"
-                value={form.funcao} 
-                onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
-              >
-                <option value="usuario">Usuário</option>
-                <option value="tecnico">Técnico</option>
-                <option value="administrador">Administrador</option>
-              </select>
-            </div>
+          {!isEditing && ( // Apenas mostra função e estado ao criar novo usuário
+            <>
+              <div>
+                <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Função</label>
+                <select 
+                  name="funcao"
+                  value={form.funcao} 
+                  onChange={handleChange}
+                  className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+                >
+                  <option value="usuario">Usuário</option>
+                  <option value="tecnico">Técnico</option>
+                  <option value="administrador">Administrador</option>
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Estado</label>
-              <select 
-                name="estado"
-                value={form.estado} 
-                onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
-              >
-                <option value="ativo">Ativo</option>
-                <option value="inativo">Inativo</option>
-              </select>
-            </div>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Estado</label>
+                <select 
+                  name="estado"
+                  value={form.estado} 
+                  onChange={handleChange}
+                  className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+                >
+                  <option value="ativo">Ativo</option>
+                  <option value="inativo">Inativo</option>
+                </select>
+              </div>
+            </>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4">
             <button 
@@ -440,7 +457,7 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
               disabled={loading} 
               className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 disabled:opacity-50"
             >
-              {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar')}
+              {loading ? 'Salvando...' : (isEditing ? 'Atualizar Senha' : 'Criar')}
             </button>
           </div>
         </form>
