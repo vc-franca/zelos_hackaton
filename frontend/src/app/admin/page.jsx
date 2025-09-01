@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect , useRef  } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Users,
@@ -49,9 +49,8 @@ function Toasts({ toasts, removeToast }) {
       {toasts.map(t => (
         <div
           key={t.id}
-          className={`w-96 max-w-full transform transition-all duration-300 shadow-lg rounded-lg overflow-hidden flex items-start gap-4 p-4 ${
-            t.type === 'success' ? 'bg-gradient-to-r from-green-50 to-white border border-green-200' : 'bg-gradient-to-r from-red-50 to-white border border-red-200'
-          }`}
+          className={`w-96 max-w-full transform transition-all duration-300 shadow-lg rounded-lg overflow-hidden flex items-start gap-4 p-4 ${t.type === 'success' ? 'bg-gradient-to-r from-green-50 to-white border border-green-200' : 'bg-gradient-to-r from-red-50 to-white border border-red-200'
+            }`}
           role="status"
         >
           <div className="mt-0.5">
@@ -169,22 +168,22 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Título</label>
-            <input 
+            <input
               name="titulo"
-              value={form.titulo} 
+              value={form.titulo}
               onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
             />
             {formErrors.titulo && <p className="text-[#E31B23] text-xs mt-1">{formErrors.titulo}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Descrição</label>
-            <textarea 
+            <textarea
               name="descricao"
-              value={form.descricao} 
+              value={form.descricao}
               onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               rows={3}
             />
             {formErrors.descricao && <p className="text-[#E31B23] text-xs mt-1">{formErrors.descricao}</p>}
@@ -193,22 +192,22 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Patrimônio (7 dígitos)</label>
-              <input 
+              <input
                 name="patrimonio"
-                value={form.patrimonio} 
+                value={form.patrimonio}
                 onChange={handleChange}
                 placeholder="0000001"
                 maxLength={7}
-                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               />
               {formErrors.patrimonio && <p className="text-[#E31B23] text-xs mt-1">{formErrors.patrimonio}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Tipo</label>
-              <select 
+              <select
                 name="tipo_id"
-                value={form.tipo_id} 
+                value={form.tipo_id}
                 onChange={handleChange}
                 className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               >
@@ -224,9 +223,9 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Técnico</label>
-              <select 
+              <select
                 name="tecnico_id"
-                value={form.tecnico_id || ''} 
+                value={form.tecnico_id || ''}
                 onChange={handleChange}
                 className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               >
@@ -239,9 +238,9 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
 
             <div>
               <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Solicitante</label>
-              <select 
+              <select
                 name="usuario_id"
-                value={form.usuario_id} 
+                value={form.usuario_id}
                 onChange={handleChange}
                 className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               >
@@ -255,9 +254,9 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
 
             <div>
               <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Estado</label>
-              <select 
+              <select
                 name="estado"
-                value={form.estado} 
+                value={form.estado}
                 onChange={handleChange}
                 className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               >
@@ -269,16 +268,16 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg hover:bg-[#FFFDF7]/30 transition duration-200"
             >
               Cancelar
             </button>
-            <button 
-              type="submit" 
-              disabled={loading} 
+            <button
+              type="submit"
+              disabled={loading}
               className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 disabled:opacity-50"
             >
               {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar')}
@@ -291,12 +290,12 @@ function ChamadoModal({ isOpen, onClose, onSubmit, initial = null, tipos = [], u
 }
 
 function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = false, loading }) {
-  const [form, setForm] = useState({ 
-    nome: '', 
-    email: '', 
-    senha: '', 
-    funcao: 'usuario', 
-    estado: 'ativo' 
+  const [form, setForm] = useState({
+    nome: '',
+    email: '',
+    senha: '',
+    funcao: 'usuario',
+    estado: 'ativo'
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -373,11 +372,11 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Nome</label>
-            <input 
+            <input
               name="nome"
-              value={form.nome} 
+              value={form.nome}
               onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               disabled={isEditing} // Desabilita no modo edição
               readOnly={isEditing} // Torna somente leitura
             />
@@ -386,12 +385,12 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
 
           <div>
             <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Email</label>
-            <input 
+            <input
               type="email"
               name="email"
-              value={form.email} 
+              value={form.email}
               onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               disabled={isEditing} // Desabilita no modo edição
               readOnly={isEditing} // Torna somente leitura
             />
@@ -402,12 +401,12 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
             <label className="block text-sm font-medium text-[#FFFDF7] mb-1">
               {isEditing ? 'Nova senha (deixe em branco para manter a atual)' : 'Senha'}
             </label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               name="senha"
-              value={form.senha} 
+              value={form.senha}
               onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               minLength="6"
             />
             {formErrors.senha && <p className="text-[#E31B23] text-xs mt-1">{formErrors.senha}</p>}
@@ -417,9 +416,9 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
             <>
               <div>
                 <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Função</label>
-                <select 
+                <select
                   name="funcao"
-                  value={form.funcao} 
+                  value={form.funcao}
                   onChange={handleChange}
                   className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
                 >
@@ -429,11 +428,29 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
                 </select>
               </div>
 
+              {/* Se a função for técnico, mostra o novo select */}
+              {form.funcao === "tecnico" && (
+                <div>
+                  <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Especialidade</label>
+                  <select
+                    name="especialidade"
+                    value={form.especialidade || ""}
+                    onChange={handleChange}
+                    className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+                  >
+                    <option value="manutencao">Manutenção</option>
+                    <option value="apoio_tecnico">Apoio Técnico</option>
+                    <option value="limpeza">Limpeza</option>
+                    <option value="externo">Externo</option>
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Estado</label>
-                <select 
+                <select
                   name="estado"
-                  value={form.estado} 
+                  value={form.estado}
                   onChange={handleChange}
                   className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
                 >
@@ -445,16 +462,16 @@ function UsuarioModal({ isOpen, onClose, onSubmit, initial = null, isEditing = f
           )}
 
           <div className="flex justify-end space-x-3 pt-4">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg hover:bg-[#FFFDF7]/30 transition duration-200"
             >
               Cancelar
             </button>
-            <button 
-              type="submit" 
-              disabled={loading} 
+            <button
+              type="submit"
+              disabled={loading}
               className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 disabled:opacity-50"
             >
               {loading ? 'Salvando...' : (isEditing ? 'Atualizar Senha' : 'Criar')}
@@ -473,9 +490,9 @@ function TipoModal({ isOpen, onClose, onSubmit, initial = null, loading }) {
 
   useEffect(() => {
     if (initial) {
-      setForm({ 
-        titulo: initial.titulo || '', 
-        descricao: initial.descricao || '' 
+      setForm({
+        titulo: initial.titulo || '',
+        descricao: initial.descricao || ''
       });
       setFormErrors({});
     } else {
@@ -537,11 +554,11 @@ function TipoModal({ isOpen, onClose, onSubmit, initial = null, loading }) {
 
           <div>
             <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Descrição</label>
-            <textarea 
+            <textarea
               name="descricao"
-              value={form.descricao} 
+              value={form.descricao}
               onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               rows={3}
               placeholder="Descreva este tipo de serviço..."
             />
@@ -549,16 +566,16 @@ function TipoModal({ isOpen, onClose, onSubmit, initial = null, loading }) {
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg hover:bg-[#FFFDF7]/30 transition duration-200"
             >
               Cancelar
             </button>
-            <button 
-              type="submit" 
-              disabled={loading} 
+            <button
+              type="submit"
+              disabled={loading}
               className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 disabled:opacity-50"
             >
               {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar')}
@@ -616,11 +633,11 @@ function ApontamentoModal({ isOpen, onClose, onSubmit, initial = null, chamados 
     if (!form.descricao) errors.descricao = 'Descrição é obrigatória';
     if (!form.comeco) errors.comeco = 'Data de início é obrigatória';
     if (!form.fim) errors.fim = 'Data de fim é obrigatória';
-    
+
     if (form.comeco && form.fim && new Date(form.comeco) >= new Date(form.fim)) {
       errors.fim = 'Data de fim deve ser posterior à data de início';
     }
-    
+
     return errors;
   };
 
@@ -656,9 +673,9 @@ function ApontamentoModal({ isOpen, onClose, onSubmit, initial = null, chamados 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Chamado</label>
-              <select 
+              <select
                 name="chamado_id"
-                value={form.chamado_id} 
+                value={form.chamado_id}
                 onChange={handleChange}
                 className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               >
@@ -672,9 +689,9 @@ function ApontamentoModal({ isOpen, onClose, onSubmit, initial = null, chamados 
 
             <div>
               <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Técnico</label>
-              <select 
+              <select
                 name="tecnico_id"
-                value={form.tecnico_id} 
+                value={form.tecnico_id}
                 onChange={handleChange}
                 className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               >
@@ -689,11 +706,11 @@ function ApontamentoModal({ isOpen, onClose, onSubmit, initial = null, chamados 
 
           <div>
             <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Descrição</label>
-            <textarea 
+            <textarea
               name="descricao"
-              value={form.descricao} 
+              value={form.descricao}
               onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+              className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               rows={3}
               placeholder="Descreva o trabalho realizado..."
             />
@@ -703,40 +720,40 @@ function ApontamentoModal({ isOpen, onClose, onSubmit, initial = null, chamados 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Data/Hora de Início</label>
-              <input 
+              <input
                 type="datetime-local"
                 name="comeco"
-                value={form.comeco} 
+                value={form.comeco}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               />
               {formErrors.comeco && <p className="text-[#E31B23] text-xs mt-1">{formErrors.comeco}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[#FFFDF7] mb-1">Data/Hora de Fim</label>
-              <input 
+              <input
                 type="datetime-local"
                 name="fim"
-                value={form.fim} 
+                value={form.fim}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none" 
+                className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
               />
               {formErrors.fim && <p className="text-[#E31B23] text-xs mt-1">{formErrors.fim}</p>}
             </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="bg-[#FFFDF7]/20 text-[#FFFDF7] px-4 py-2 rounded-lg hover:bg-[#FFFDF7]/30 transition duration-200"
             >
               Cancelar
             </button>
-            <button 
-              type="submit" 
-              disabled={loading} 
+            <button
+              type="submit"
+              disabled={loading}
               className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200 disabled:opacity-50"
             >
               {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar')}
@@ -754,13 +771,13 @@ function ApontamentoModal({ isOpen, onClose, onSubmit, initial = null, chamados 
 
 function ExportChamadoForm({ chamados, onExport }) {
   const [selectedId, setSelectedId] = useState('');
-  
+
   return (
     <div className="space-y-3">
-      <select 
-        value={selectedId} 
+      <select
+        value={selectedId}
         onChange={(e) => setSelectedId(e.target.value)}
-        className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-[#1B1F3B] focus:border-[#E31B23] focus:outline-none"
+        className="w-full p-3 rounded-lg bg-[#1B1F3B] text-[#FFFDF7] border border-white focus:border-[#E31B23] focus:outline-none"
       >
         <option value="">Selecione um Chamado</option>
         {chamados.map(c => (
@@ -769,27 +786,27 @@ function ExportChamadoForm({ chamados, onExport }) {
       </select>
 
       <div className="flex gap-2">
-        <button 
+        <button
           onClick={() => {
             if (!selectedId) {
               alert('Escolha um chamado');
               return;
             }
             onExport(selectedId, 'pdf');
-          }} 
+          }}
           className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200"
         >
           Exportar PDF
         </button>
 
-        <button 
+        <button
           onClick={() => {
             if (!selectedId) {
               alert('Escolha um chamado');
               return;
             }
             onExport(selectedId, 'excel');
-          }} 
+          }}
           className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
         >
           Exportar Excel
@@ -844,7 +861,7 @@ export default function AdminPage() {
   const addToast = (type, title, message, duration = 4000) => {
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     setToasts(prev => [...prev, { id, type, title, message }]);
-    
+
     if (toastTimerRef.current[id]) clearTimeout(toastTimerRef.current[id]);
     toastTimerRef.current[id] = setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
@@ -975,10 +992,10 @@ export default function AdminPage() {
         credentials: 'include',
         body: JSON.stringify(payload)
       });
-      
+
       const updatedChamados = await fetch('http://localhost:8080/chamados', { credentials: 'include' }).then(res => res.json());
       setChamados(updatedChamados);
-      
+
       setModalChamadoOpen(false);
       setEditingChamado(null);
       addToast('success', 'Sucesso', 'Chamado criado com sucesso');
@@ -998,10 +1015,10 @@ export default function AdminPage() {
         credentials: 'include',
         body: JSON.stringify(payload)
       });
-      
+
       const updatedChamados = await fetch('http://localhost:8080/chamados', { credentials: 'include' }).then(res => res.json());
       setChamados(updatedChamados);
-      
+
       setModalChamadoOpen(false);
       setEditingChamado(null);
       addToast('success', 'Sucesso', 'Chamado atualizado com sucesso');
@@ -1014,9 +1031,9 @@ export default function AdminPage() {
 
   const deleteChamado = async (id) => {
     if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
-    
+
     try {
-      await fetch(`http://localhost:8080/chamados/${id}`, { 
+      await fetch(`http://localhost:8080/chamados/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -1055,11 +1072,11 @@ export default function AdminPage() {
         credentials: 'include',
         body: JSON.stringify(payload)
       });
-      
+
       const updatedUsuarios = await fetch('http://localhost:8080/usuarios', { credentials: 'include' }).then(res => res.json());
       setUsuarios(updatedUsuarios);
       setTecnicos(updatedUsuarios.filter(u => u.funcao === 'tecnico'));
-      
+
       setModalUsuarioOpen(false);
       setEditingUsuario(null);
       addToast('success', 'Sucesso', 'Usuário criado com sucesso');
@@ -1079,11 +1096,11 @@ export default function AdminPage() {
         credentials: 'include',
         body: JSON.stringify(payload)
       });
-      
+
       const updatedUsuarios = await fetch('http://localhost:8080/usuarios', { credentials: 'include' }).then(res => res.json());
       setUsuarios(updatedUsuarios);
       setTecnicos(updatedUsuarios.filter(u => u.funcao === 'tecnico'));
-      
+
       setModalUsuarioOpen(false);
       setEditingUsuario(null);
       addToast('success', 'Sucesso', 'Usuário atualizado com sucesso');
@@ -1096,9 +1113,9 @@ export default function AdminPage() {
 
   const deleteUsuario = async (id) => {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
-    
+
     try {
-      await fetch(`http://localhost:8080/usuarios/${id}`, { 
+      await fetch(`http://localhost:8080/usuarios/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -1123,10 +1140,10 @@ export default function AdminPage() {
         credentials: 'include',
         body: JSON.stringify(payload)
       });
-      
+
       const updatedTipos = await fetch('http://localhost:8080/pool', { credentials: 'include' }).then(res => res.json());
       setTipos(updatedTipos);
-      
+
       setModalTipoOpen(false);
       setEditingTipo(null);
       addToast('success', 'Sucesso', 'Tipo de serviço criado com sucesso');
@@ -1146,10 +1163,10 @@ export default function AdminPage() {
         credentials: 'include',
         body: JSON.stringify(payload)
       });
-      
+
       const updatedTipos = await fetch('http://localhost:8080/pool', { credentials: 'include' }).then(res => res.json());
       setTipos(updatedTipos);
-      
+
       setModalTipoOpen(false);
       setEditingTipo(null);
       addToast('success', 'Sucesso', 'Tipo de serviço atualizado com sucesso');
@@ -1162,9 +1179,9 @@ export default function AdminPage() {
 
   const deleteTipo = async (id) => {
     if (!confirm('Tem certeza que deseja excluir este tipo de serviço?')) return;
-    
+
     try {
-      await fetch(`http://localhost:8080/pool/${id}`, { 
+      await fetch(`http://localhost:8080/pool/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -1188,10 +1205,10 @@ export default function AdminPage() {
         credentials: 'include',
         body: JSON.stringify(payload)
       });
-      
+
       const updatedApontamentos = await fetch('http://localhost:8080/apontamentos', { credentials: 'include' }).then(res => res.json());
       setApontamentos(updatedApontamentos);
-      
+
       setModalApontamentoOpen(false);
       setEditingApontamento(null);
       addToast('success', 'Sucesso', 'Apontamento criado com sucesso');
@@ -1211,10 +1228,10 @@ export default function AdminPage() {
         credentials: 'include',
         body: JSON.stringify(payload)
       });
-      
+
       const updatedApontamentos = await fetch('http://localhost:8080/apontamentos', { credentials: 'include' }).then(res => res.json());
       setApontamentos(updatedApontamentos);
-      
+
       setModalApontamentoOpen(false);
       setEditingApontamento(null);
       addToast('success', 'Sucesso', 'Apontamento atualizado com sucesso');
@@ -1227,9 +1244,9 @@ export default function AdminPage() {
 
   const deleteApontamento = async (id) => {
     if (!confirm('Tem certeza que deseja excluir este apontamento?')) return;
-    
+
     try {
-      await fetch(`http://localhost:8080/apontamentos/${id}`, { 
+      await fetch(`http://localhost:8080/apontamentos/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -1249,7 +1266,7 @@ export default function AdminPage() {
       const doc = new jsPDF();
       doc.setFontSize(16);
       doc.text(filename, 14, 20);
-      
+
       const tableData = data.map(item => [
         item.id || '',
         item.titulo || '',
@@ -1313,7 +1330,7 @@ export default function AdminPage() {
   const exportChamadosRange = (range = 'week', type = 'pdf') => {
     const now = new Date();
     let startDate;
-    
+
     if (range === 'week') {
       startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     } else if (range === 'month') {
@@ -1343,13 +1360,13 @@ export default function AdminPage() {
      ============================ */
 
   const filteredChamados = chamados.filter(chamado => {
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       chamado.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       chamado.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       getUserName(chamado.usuario_id).toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = statusFilter === '' || chamado.estado === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -1405,7 +1422,7 @@ export default function AdminPage() {
             <span>
               Bem-vindo, <span className="font-semibold">{currentUser?.nome || 'Admin'}</span>
             </span>
-          
+
           </div>
         </div>
       </header>
@@ -1423,14 +1440,13 @@ export default function AdminPage() {
           ].map(tab => {
             const Icon = tab.icon;
             return (
-              <button 
+              <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition duration-200 whitespace-nowrap ${
-                  activeTab === tab.id 
-                    ? 'bg-[#E31B23]/20 text-[#E31B23] border border-[#E31B23]/30' 
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition duration-200 whitespace-nowrap ${activeTab === tab.id
+                    ? 'bg-[#E31B23]/20 text-[#E31B23] border border-[#E31B23]/30'
                     : 'text-[#FFFDF7]/70 hover:text-[#FFFDF7] hover:bg-[#1B1F3B]'
-                }`}
+                  }`}
               >
                 <Icon className="w-5 h-5" />
                 <span className="font-medium">{tab.label}</span>
@@ -1443,29 +1459,29 @@ export default function AdminPage() {
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard 
-                title="Total de Chamados" 
-                value={stats.total} 
-                icon={Ticket} 
-                color="bg-blue-500" 
+              <StatCard
+                title="Total de Chamados"
+                value={stats.total}
+                icon={Ticket}
+                color="bg-blue-500"
               />
-              <StatCard 
-                title="Pendentes" 
-                value={stats.pendentes} 
-                icon={AlertCircle} 
-                color="bg-[#E31B23]" 
+              <StatCard
+                title="Pendentes"
+                value={stats.pendentes}
+                icon={AlertCircle}
+                color="bg-[#E31B23]"
               />
-              <StatCard 
-                title="Em Andamento" 
-                value={stats.emAndamento} 
-                icon={Clock} 
-                color="bg-yellow-500" 
+              <StatCard
+                title="Em Andamento"
+                value={stats.emAndamento}
+                icon={Clock}
+                color="bg-yellow-500"
               />
-              <StatCard 
-                title="Concluídos" 
-                value={stats.concluidos} 
-                icon={CheckCircle} 
-                color="bg-green-500" 
+              <StatCard
+                title="Concluídos"
+                value={stats.concluidos}
+                icon={CheckCircle}
+                color="bg-green-500"
               />
             </div>
 
@@ -1505,7 +1521,7 @@ export default function AdminPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingChamado(chamado);
                                 setModalChamadoOpen(true);
@@ -1514,7 +1530,7 @@ export default function AdminPage() {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => deleteChamado(chamado.id)}
                               className="text-[#E31B23] hover:text-[#C5161D]"
                             >
@@ -1536,7 +1552,7 @@ export default function AdminPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Gerenciar Chamados</h2>
-              <button 
+              <button
                 onClick={() => {
                   setEditingChamado(null);
                   setModalChamadoOpen(true);
@@ -1625,7 +1641,7 @@ export default function AdminPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingChamado(chamado);
                                 setModalChamadoOpen(true);
@@ -1635,7 +1651,7 @@ export default function AdminPage() {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => deleteChamado(chamado.id)}
                               className="text-[#E31B23] hover:text-[#C5161D]"
                               title="Excluir"
@@ -1658,7 +1674,7 @@ export default function AdminPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Gerenciar Usuários</h2>
-              <button 
+              <button
                 onClick={() => {
                   setEditingUsuario(null);
                   setModalUsuarioOpen(true);
@@ -1702,24 +1718,22 @@ export default function AdminPage() {
                           {usuario.email}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            usuario.funcao === 'administrador' ? 'bg-purple-500/20 text-purple-400' :
-                            usuario.funcao === 'tecnico' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-gray-500/20 text-gray-400'
-                          }`}>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${usuario.funcao === 'administrador' ? 'bg-purple-500/20 text-purple-400' :
+                              usuario.funcao === 'tecnico' ? 'bg-blue-500/20 text-blue-400' :
+                                'bg-gray-500/20 text-gray-400'
+                            }`}>
                             {usuario.funcao}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            usuario.estado === 'ativo' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                          }`}>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${usuario.estado === 'ativo' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                            }`}>
                             {usuario.estado}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingUsuario(usuario);
                                 setModalUsuarioOpen(true);
@@ -1729,7 +1743,7 @@ export default function AdminPage() {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => deleteUsuario(usuario.id)}
                               className="text-[#E31B23] hover:text-[#C5161D]"
                               title="Excluir"
@@ -1752,7 +1766,7 @@ export default function AdminPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Gerenciar Tipos de Serviço</h2>
-      
+
             </div>
 
             <div className="bg-[#1B1F3B] rounded-xl shadow-lg border border-[#FFFDF7]/10">
@@ -1786,7 +1800,7 @@ export default function AdminPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingTipo(tipo);
                                 setModalTipoOpen(true);
@@ -1796,7 +1810,7 @@ export default function AdminPage() {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => deleteTipo(tipo.id)}
                               className="text-[#E31B23] hover:text-[#C5161D]"
                               title="Excluir"
@@ -1819,7 +1833,7 @@ export default function AdminPage() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Gerenciar Apontamentos</h2>
-              <button 
+              <button
                 onClick={() => {
                   setEditingApontamento(null);
                   setModalApontamentoOpen(true);
@@ -1876,7 +1890,7 @@ export default function AdminPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingApontamento(apontamento);
                                 setModalApontamentoOpen(true);
@@ -1886,7 +1900,7 @@ export default function AdminPage() {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => deleteApontamento(apontamento.id)}
                               className="text-[#E31B23] hover:text-[#C5161D]"
                               title="Excluir"
@@ -1913,26 +1927,26 @@ export default function AdminPage() {
               <ExportChamadoForm chamados={chamados} onExport={exportChamadoById} />
               <h3 className="text-lg font-semibold mt-8 mb-4">Exportar Chamados por Período</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button 
-                  onClick={() => exportChamadosRange('week', 'pdf')} 
+                <button
+                  onClick={() => exportChamadosRange('week', 'pdf')}
                   className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200"
                 >
                   Exportar Semana (PDF)
                 </button>
-                <button 
-                  onClick={() => exportChamadosRange('week', 'excel')} 
+                <button
+                  onClick={() => exportChamadosRange('week', 'excel')}
                   className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
                 >
                   Exportar Semana (Excel)
                 </button>
-                <button 
-                  onClick={() => exportChamadosRange('month', 'pdf')} 
+                <button
+                  onClick={() => exportChamadosRange('month', 'pdf')}
                   className="bg-[#E31B23] text-white px-4 py-2 rounded-lg hover:bg-[#C5161D] transition duration-200"
                 >
                   Exportar Mês (PDF)
                 </button>
-                <button 
-                  onClick={() => exportChamadosRange('month', 'excel')} 
+                <button
+                  onClick={() => exportChamadosRange('month', 'excel')}
                   className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200"
                 >
                   Exportar Mês (Excel)
@@ -1943,7 +1957,7 @@ export default function AdminPage() {
         )}
       </main>
 
-      <ChamadoModal 
+      <ChamadoModal
         isOpen={modalChamadoOpen}
         onClose={() => setModalChamadoOpen(false)}
         onSubmit={(data) => editingChamado ? updateChamado(editingChamado.id, data) : createChamado(data)}
@@ -1953,7 +1967,7 @@ export default function AdminPage() {
         tecnicos={tecnicos}
         loading={genericLoading}
       />
-      <UsuarioModal 
+      <UsuarioModal
         isOpen={modalUsuarioOpen}
         onClose={() => setModalUsuarioOpen(false)}
         onSubmit={(data) => editingUsuario ? updateUsuario(editingUsuario.id, data) : createUsuario(data)}
@@ -1961,14 +1975,14 @@ export default function AdminPage() {
         isEditing={!!editingUsuario}
         loading={genericLoading}
       />
-      <TipoModal 
+      <TipoModal
         isOpen={modalTipoOpen}
         onClose={() => setModalTipoOpen(false)}
         onSubmit={(data) => editingTipo ? updateTipo(editingTipo.id, data) : createTipo(data)}
         initial={editingTipo}
         loading={genericLoading}
       />
-      <ApontamentoModal 
+      <ApontamentoModal
         isOpen={modalApontamentoOpen}
         onClose={() => setModalApontamentoOpen(false)}
         onSubmit={(data) => editingApontamento ? updateApontamento(editingApontamento.id, data) : createApontamento(data)}
