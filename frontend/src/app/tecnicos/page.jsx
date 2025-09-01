@@ -342,18 +342,8 @@ export default function PainelTecnico() {
             Gerencie seus chamados, atualize status e registre apontamentos
           </p>
           <div className="flex gap-4">
-            <button
-              onClick={() => window.history.back()}
-              className="text-[#FFFDF7] underline hover:text-[#E31B23] transition duration-300"
-            >
-              Voltar para a Página Inicial
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-[#E31B23] hover:bg-[#C5161D] text-[#FFFDF7] px-4 py-2 rounded-lg font-medium transition duration-300"
-            >
-              Sair
-            </button>
+           
+           
           </div>
         </div>
       </header>
