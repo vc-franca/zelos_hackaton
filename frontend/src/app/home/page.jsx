@@ -55,11 +55,10 @@ const EquipmentCard = ({ title, icon, features, status }) => (
         </div>
       ))}
     </div>
-    <div className={`inline-block px-4 py-2 rounded-full text-xs font-semibold ${
-      status === 'ativo' ? 'bg-green-100 text-green-800' : 
-      status === 'manutenção' ? 'bg-yellow-100 text-yellow-800' : 
-      'bg-red-100 text-red-800'
-    }`}>
+    <div className={`inline-block px-4 py-2 rounded-full text-xs font-semibold ${status === 'ativo' ? 'bg-green-100 text-green-800' :
+        status === 'manutenção' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-red-100 text-red-800'
+      }`}>
       {status}
     </div>
   </div>
@@ -168,7 +167,7 @@ export default function HomePage() {
               <h2 className="text-4xl font-bold text-[#1B1F3B] mb-4 sr-slide-up">Nossos Serviços</h2>
               <div className="w-24 h-1 bg-[#E31B23] mx-auto"></div>
             </div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
               {/* Cards de Serviços */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -217,18 +216,17 @@ export default function HomePage() {
                   gradient="bg-gradient-to-br from-[#676F9D] to-[#8B9DC3]"
                 />
               </div>
-              
+
               {/* Imagem Placeholder */}
+
               <div className="hidden lg:block">
                 <div className="bg-gradient-to-br from-[#1B1F3B] to-[#2D3250] p-8 rounded-2xl shadow-2xl h-full min-h-[600px] flex items-center justify-center">
                   <div className="bg-white/10 w-full h-full rounded-xl flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <svg className="w-24 h-24 mx-auto mb-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-xl font-semibold">Sistema Integrado</p>
-                      <p className="text-white/70">Interface moderna e intuitiva</p>
-                    </div>
+                    <img
+                      src="/manutencao-de-computador.jpg"
+                      alt="Descrição da imagem"
+                      className="max-w-full max-h-full object-contain"
+                    />
                   </div>
                 </div>
               </div>
@@ -343,7 +341,7 @@ export default function HomePage() {
               <h2 className="text-4xl font-bold text-[#1B1F3B] mb-4 sr-slide-up">O Que Dizem Nossos Usuários</h2>
               <div className="w-24 h-1 bg-[#E31B23] mx-auto"></div>
             </div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               {/* Imagem Representativa */}
               <div className="lg:col-span-1">
@@ -363,7 +361,7 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Cards de Depoimentos */}
               <div className="lg:col-span-2 space-y-6">
                 <TestimonialCard
