@@ -66,13 +66,35 @@ cd ..
 
 Crie um banco de dados MySQL com o nome de sua escolha, por exemplo, `zelos`. Crie as credenciais de acesso e as teste.
 
-### 4. Iniciar o servidor
+### 4. Chaves secretas
+
+Crie um arquivo chamado .env em backend/ seguindo o exemplo do arquivo .env.example
+
+No terminal, Execute:
+
+```bash
+node backend/utils/generateSecret.js
+```
+
+Isso gerará uma chave secreta embaralhada no terminal, copie-a e cole-a na variável CHAVE_JWT do .env
+
+Na variável NODE_ENV, escreva 'development' se o projeto estiver um desenvolvimento e 'production' se estiver usando em produção
+
+
+### 5. Iniciar o servidor
 
 Inicie o servidor de desenvolvimento do Next.js:
 
 ```bash
 cd frontend
 npm run dev
+```
+
+Inicie a API:
+
+```bash 
+cd backend
+node --watch app.js
 ```
 
 Agora, o sistema estará rodando em `http://localhost:3000`.
