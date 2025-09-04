@@ -113,7 +113,7 @@ A estrutura de diretórios do projeto segue a organização padrão do Next.js, 
 /utils               # Funções utilitárias
 ```
 
-# Todos os usuários registrados no dump do banco têm a senha "password"
+### Todos os usuários registrados no dump do banco têm a senha "password"
 
 ## Banco de Dados
 
