@@ -258,17 +258,6 @@ export default function LoginPage() {
                       'Entrar'
                     )}
                   </button>
-
-                  {/* Forgot Password */}
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      className="text-sm text-gray-300 hover:text-white transition-colors duration-300 underline"
-                      disabled={isLoading} // Desativa botão durante loading
-                    >
-                      Esqueceu sua senha?
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
